@@ -74,16 +74,23 @@ try {
     const summary = await page.evaluate(() => ({
       title: document.title,
       h1Count: document.querySelectorAll("main h1").length,
-      links: [...document.querySelectorAll("a[href]")].map((anchor, index) => {
-        const style = getComputedStyle(anchor);
-        return {
-          index,
-          href: anchor.getAttribute("href") || "",
-          target: anchor.getAttribute("target") || "",
-          skipLink: anchor.classList.contains("skip-link"),
-          visible: Boolean(anchor.getClientRects().length) && style.display !== "none" && style.visibility !== "hidden",
-        };
-      }),
+      links: (() => {
+        const seen = new Map();
+        return [...document.querySelectorAll("a[href]")].map((anchor, index) => {
+          const style = getComputedStyle(anchor);
+          const href = anchor.getAttribute("href") || "";
+          const occurrence = seen.get(href) || 0;
+          seen.set(href, occurrence + 1);
+          return {
+            index,
+            occurrence,
+            href,
+            target: anchor.getAttribute("target") || "",
+            skipLink: anchor.classList.contains("skip-link"),
+            visible: Boolean(anchor.getClientRects().length) && style.display !== "none" && style.visibility !== "hidden",
+          };
+        });
+      })(),
     }));
     if (!summary.title.trim()) failures.push(route + ": empty document title");
     if (summary.h1Count !== 1) failures.push(route + ": expected one main h1, found " + summary.h1Count);
@@ -137,10 +144,15 @@ try {
       }
 
       await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
-      await page.waitForTimeout(100);
-      const link = page.locator("a[href]").nth(item.index);
+      const escapedHref = item.href.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+      const link = page.locator('a[href="' + escapedHref + '"]').nth(item.occurrence);
+      const attached = await link.waitFor({ state: "attached", timeout: 7000 }).then(() => true).catch(() => false);
+      if (!attached) {
+        failures.push(route + ": link disappeared after route reload: " + item.href + " (duplicate " + item.occurrence + ")");
+        continue;
+      }
       if (!(await link.isVisible().catch(() => false))) continue;
-      await link.scrollIntoViewIfNeeded();
+      await link.scrollIntoViewIfNeeded({ timeout: 7000 });
 
       try {
         const popupPromise = item.target === "_blank"
@@ -282,7 +294,9 @@ try {
       await form.locator('select[name="type"]').selectOption("Business website");
       await form.locator('textarea[name="goal"]').fill("Make the primary website journey clearer and easier to complete.");
     }
-    await submit.click();
+    // The submit handler deliberately opens a mailto: URL. Trigger the real
+    // button click without waiting for an external mail application navigation.
+    await submit.evaluate((element) => element.click());
     clickActions += 1;
     const status = await form.locator('[role="status"]').textContent();
     if (!status || !status.includes("email app")) {
