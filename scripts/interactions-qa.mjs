@@ -31,6 +31,8 @@ const browser = await chromium.launch({
 async function visit(page, route) {
   const response = await page.goto(baseURL + route, { waitUntil: "commit", timeout: 15000 });
   await page.locator("main h1").waitFor({ state: "visible", timeout: 12000 });
+  // The shared shell is hydrated before per-link interactions begin.
+  await page.locator("a.skip-link").waitFor({ state: "attached", timeout: 12000 });
   return response;
 }
 
