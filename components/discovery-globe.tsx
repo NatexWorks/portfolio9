@@ -268,7 +268,7 @@ export default function DiscoveryGlobe({ compact = false }: Props) {
   useEffect(() => {
     const node = root.current;
     if (!node) return;
-    if (!("IntersectionObserver" in window)) {
+    if (typeof window.IntersectionObserver !== "function") {
       const frame = window.requestAnimationFrame(() => {
         setEntered(true);
         setVisible(true);
