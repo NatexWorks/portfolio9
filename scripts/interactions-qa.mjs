@@ -58,7 +58,7 @@ async function assertDestination(page, expected, context) {
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
   const page = await context.newPage();
-  page.on("pageerror", (error) => browserErrors.push(activeRoute + ": " + error.message));
+  page.on("pageerror", (error) => browserErrors.push(activeRoute + ": " + (error.stack || error.message)));
 
   // Visit every public route and click every visible same-site link individually.
   for (const route of routes) {
@@ -80,6 +80,7 @@ try {
           index,
           href: anchor.getAttribute("href") || "",
           target: anchor.getAttribute("target") || "",
+          skipLink: anchor.classList.contains("skip-link"),
           visible: Boolean(anchor.getClientRects().length) && style.display !== "none" && style.visibility !== "hidden",
         };
       }),
@@ -87,9 +88,23 @@ try {
     if (!summary.title.trim()) failures.push(route + ": empty document title");
     if (summary.h1Count !== 1) failures.push(route + ": expected one main h1, found " + summary.h1Count);
 
+    // The skip link is intentionally visually hidden until keyboard focus.
+    // Focus it first, then click the revealed control to verify its destination.
+    const skipLink = page.locator("a.skip-link");
+    if (await skipLink.count()) {
+      await skipLink.focus();
+      if (!(await skipLink.isVisible())) failures.push(route + ": skip link did not become visible on keyboard focus");
+      await skipLink.click();
+      if (new URL(page.url()).hash !== "#main-content") {
+        failures.push(route + ": skip link did not navigate to #main-content");
+      } else {
+        clickActions += 1;
+      }
+    }
+
     let routeClicks = 0;
     for (const item of summary.links) {
-      if (!item.visible || !item.href) continue;
+      if (item.skipLink || !item.visible || !item.href) continue;
       const expected = parseTarget(item.href);
       if (!expected) {
         failures.push(route + ": malformed link " + item.href);
@@ -110,6 +125,7 @@ try {
 
       if (expected.hash && expected.pathname === new URL(baseURL + route).pathname) {
         const id = decodeURIComponent(expected.hash.slice(1));
+        if (route === "/") await page.waitForSelector("#" + id, { timeout: 5000 }).catch(() => {});
         const exists = await page.evaluate((targetId) => Boolean(document.getElementById(targetId)), id);
         if (!exists) {
           failures.push(route + ": broken in-page anchor " + expected.hash);
