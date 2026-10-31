@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import HeroScene from "@/components/hero-scene";
 
 export const metadata: Metadata = {
   title: "About Manish — The thinking behind NatexWorks",
@@ -14,6 +15,7 @@ export default function AboutPage() {
         <div className="section-kicker"><span>ABOUT MANISH / NATEXWORKS</span><span>THOUGHTFUL BY DESIGN</span></div>
         <p className="eyebrow"><span className="eyebrow__dot" /> A LITTLE ABOUT ME</p>
         <h1>Curious by nature.<br /><em>Practical by design.</em></h1>
+        <div className="about-hero-visual" aria-hidden="true"><HeroScene /></div>
         <div className="page-hero__bottom">
           <p>I build custom websites and digital tools that solve real business problems—from complete business workflows to clearer online experiences.</p>
           <span>THE THINKING BEHIND THE WORK ↓</span>
@@ -32,23 +34,13 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="about-visual-story section-pad">
-        <div className="about-visual-story__top"><span>HOW THE WORK TAKES SHAPE</span><span>01 — 04</span></div>
-        <div className="about-visual-story__canvas">
-          <div className="about-visual-story__grid" />
-          <div className="about-visual-story__shape" data-parallax="18"><span>N×</span></div>
-          <div className="about-visual-story__side-note" data-parallax="8">QUESTION<br />→ STRUCTURE<br />→ SYSTEM<br />→ USEFULNESS</div>
-          <span className="about-visual-story__caption">A GOOD SOLUTION SHOULD MAKE THE WORK FEEL LIGHTER.</span>
-        </div>
-      </section>
-
       <section className="about-method section-pad" data-mobile-reveal>
         <div className="section-kicker"><span>HOW I WORK</span><span>FOUR CLEAR MOVES</span></div>
-        <div className="about-method__list">
-          <article><span>01</span><div><h3>Understand before proposing.</h3><p>I start with the goal, the people using the solution, the current process, and the problem that needs attention.</p></div></article>
-          <article><span>02</span><div><h3>Plan the right direction.</h3><p>I work out the structure, content, essential features, and visual direction before moving into development.</p></div></article>
-          <article><span>03</span><div><h3>Build, then test the details.</h3><p>I develop the agreed experience and review its important interactions, data flow, and behaviour across screen sizes.</p></div></article>
-          <article><span>04</span><div><h3>Review and hand over clearly.</h3><p>I check the key flows, accessibility, and responsive behaviour, resolve agreed fixes, and explain what has been delivered.</p></div></article>
+        <div className="about-method__list" data-about-process>
+          <article data-about-step><span>01</span><div><h3>Understand the real problem.</h3><p>Start with the goal, the people the solution is for, the way things work today, and where the friction actually sits. This gives the project a clear problem to solve instead of relying on assumptions.</p></div></article>
+          <article data-about-step><span>02</span><div><h3>Agree on the right direction.</h3><p>Turn that understanding into a practical plan covering structure, content, essential features, priorities, constraints, and visual direction. Confirm the scope and expectations before development begins.</p></div></article>
+          <article data-about-step><span>03</span><div><h3>Build and test what matters.</h3><p>Develop the agreed solution, then test its important interactions, data flows, and behaviour across screen sizes. Refine the details that affect usability, clarity, and reliability.</p></div></article>
+          <article data-about-step><span>04</span><div><h3>Review and hand over clearly.</h3><p>Check the key journeys, accessibility, and responsive behaviour; complete the agreed refinements; and explain what has been delivered, how it works, and what sits outside the agreed scope.</p></div></article>
         </div>
       </section>
 

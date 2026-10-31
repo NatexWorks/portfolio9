@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { process, services } from "@/content/site";
+import ServiceArt from "@/components/service-art";
 
 export const metadata: Metadata = {
   title: "Services — Websites, applications & local visibility",
@@ -61,12 +62,13 @@ export default function ServicesPage() {
       <section className="service-detail-list section-pad">
         <div className="section-kicker"><span>WHAT I CAN HELP WITH</span><span>FOUR PRACTICAL DISCIPLINES</span></div>
         {services.map((service) => (
-          <article className="service-detail" id={"service-" + service.number} key={service.number} data-mobile-reveal>
+          <article className="service-detail" id={"service-" + service.number} key={service.number} data-mobile-reveal data-reveal>
             <div className="service-detail__number">{service.number}</div>
             <div className="service-detail__main">
               <p className="eyebrow">{service.kicker}</p>
               <h2>{service.title}</h2>
               <p className="service-detail__description">{service.description}</p>
+              <ServiceArt number={service.number} />
             </div>
             <div>
               <ul className="service-detail__points">

@@ -41,21 +41,21 @@ export default function SiteShell({ children }: { children: ReactNode }) {
 
           <nav className="desktop-nav" aria-label="Main navigation">
             {navigation.map((item) => (
-              <Link
+              <a
                 key={item.href}
                 href={item.href}
                 aria-current={pathname === item.href || pathname.startsWith(item.href + "/") ? "page" : undefined}
                 className="nav-link"
               >
                 {item.label}
-              </Link>
+              </a>
             ))}
           </nav>
 
-          <Link className="header-cta" href="/start-project">
+          <a className="header-cta" href="/start-project">
             <span>Start a project</span>
             <span aria-hidden="true">↗</span>
-          </Link>
+          </a>
 
           <button
             ref={toggleRef}
@@ -78,7 +78,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
           aria-hidden={!menuOpen}
         >
           {navigation.map((item, index) => (
-            <Link
+            <a
               key={item.href}
               href={item.href}
               tabIndex={menuOpen ? 0 : -1}
@@ -88,13 +88,13 @@ export default function SiteShell({ children }: { children: ReactNode }) {
               <span className="mobile-nav__number">0{index + 1}</span>
               <span>{item.label}</span>
               <span aria-hidden="true">↗</span>
-            </Link>
+            </a>
           ))}
-          <Link className="mobile-nav__project" href="/start-project" tabIndex={menuOpen ? 0 : -1} onClick={() => setOpenAtPath(null)}>
+          <a className="mobile-nav__project" href="/start-project" tabIndex={menuOpen ? 0 : -1} onClick={() => setOpenAtPath(null)}>
             <span className="mobile-nav__number">↗</span>
             <span>Start a project</span>
             <span aria-hidden="true">↗</span>
-          </Link>
+          </a>
         </nav>
       </header>
 
@@ -106,9 +106,9 @@ export default function SiteShell({ children }: { children: ReactNode }) {
             <p className="eyebrow">A practical next step</p>
             <h2>Have a useful problem<br /><em>worth solving?</em></h2>
           </div>
-          <Link className="round-link" href="/start-project" aria-label="Start a project enquiry">
+          <a className="round-link" href="/start-project" aria-label="Start a project enquiry">
             <span aria-hidden="true">↗</span>
-          </Link>
+          </a>
         </div>
         <div className="site-footer__bottom">
           <Link className="wordmark wordmark--footer" href="/">

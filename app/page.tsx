@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import HeroScene from "@/components/hero-scene";
 import ProjectArt from "@/components/project-art";
+import WorkflowDesktopStory from "@/components/workflow-desktop-story";
 import { projects, process, services } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -115,6 +116,7 @@ export default function HomePage() {
           <h2>Useful workflows.<br /><em>One workspace.</em></h2>
           <p>Four connected jobs from the inventory application: organise products, review stock, move an order through its lifecycle, and find an item using its barcode.</p>
         </div>
+        <WorkflowDesktopStory />
         <div className="workflow-stage" data-mobile-workflow-stage>
           <div className="workflow-stack" data-mobile-workflow-stack aria-label="Four inventory application workflows">
             <article className="workflow-card workflow-card--catalog" data-workflow-card>
@@ -142,7 +144,7 @@ export default function HomePage() {
         <div className="workflow-showcase__foot"><span>SCROLL TO MOVE THROUGH THE WORKFLOWS</span><span>CATALOG → STOCK → CHECKOUT → BARCODE</span></div>
       </section>
 
-      <section className="process-overview section-pad" data-workflow-next-panel>
+      <section className="process-overview section-pad" data-workflow-next-panel data-process-story>
         <div className="section-kicker"><span>05 / HOW IT COMES TOGETHER</span><span>FROM PROBLEM TO PRODUCT</span></div>
         <div className="section-heading-row">
           <h2>Clear steps.<br /><em>No guesswork.</em></h2>
@@ -150,7 +152,7 @@ export default function HomePage() {
         </div>
         <div className="process-grid">
           {process.map((step) => (
-            <article className="process-item" key={step.number} data-reveal>
+            <article className="process-item" key={step.number} data-reveal data-process-item>
               <span>{step.number}</span><h3>{step.title}</h3><p>{step.text}</p>
             </article>
           ))}
