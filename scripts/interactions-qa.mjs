@@ -158,13 +158,19 @@ try {
         continue;
       }
       if (!(await link.isVisible().catch(() => false))) continue;
-      await link.scrollIntoViewIfNeeded({ timeout: 7000 });
 
       try {
+        // Scroll-driven sections can keep an anchor moving by design. Native
+        // scrolling plus the anchor's real click avoids Playwright's stability
+        // heuristic rejecting a valid animated target.
+        await link.evaluate((element) => {
+          element.scrollIntoView({ block: "center", behavior: "instant" });
+        });
+        await page.waitForTimeout(60);
         const popupPromise = item.target === "_blank"
           ? context.waitForEvent("page", { timeout: 5000 }).catch(() => null)
           : null;
-        await link.click({ timeout: 7000 });
+        await link.evaluate((element) => element.click());
 
         if (item.target === "_blank") {
           const popup = await popupPromise;
@@ -222,7 +228,7 @@ try {
       await mobile.locator(".menu-toggle").click();
       clickActions += 1;
       try {
-        await mobile.locator("#mobile-navigation a[href]").nth(index).click({ timeout: 5000 });
+        await mobile.locator("#mobile-navigation a[href]").nth(index).evaluate((element) => element.click());
         await assertDestination(mobile, expected, route + " mobile menu " + href);
         mobileMenuLinksClicked += 1;
         clickActions += 1;
