@@ -27,7 +27,7 @@ export default function WorkPage() {
           {projects.map((project) => (
             <article className="work-card" key={project.slug}>
               <Link className="work-card__link" href={"/work/" + project.slug}>
-                <div className="work-card__visual"><ProjectArt variant={project.art} /></div>
+                <div className="work-card__visual"><ProjectArt variant={project.art} compact /></div>
                 <div className="work-card__meta"><span>{project.status.toUpperCase()}</span><span>{project.number} / 03</span></div>
                 <div className="work-card__heading"><h2>{project.title}</h2><span aria-hidden="true">↗</span></div>
                 <p>{project.summary}</p>

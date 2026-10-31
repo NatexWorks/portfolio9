@@ -1360,10 +1360,14 @@ main { display: block; overflow: clip; }
   display: block;
   width: 100% !important;
   height: 100% !important;
-  border-radius: 50%;
 }
-.discovery-globe canvas { outline: none; }
+.discovery-globe canvas {
+  outline: none;
+  border-radius: 0;
+  background: transparent;
+}
 .discovery-globe__fallback {
+  border-radius: 50%;
   background:
     radial-gradient(circle at 34% 28%, rgba(126,190,209,.5), transparent 47%),
     radial-gradient(circle at 63% 70%, #0a1c30 0, #16445e 50%, #071523 78%);

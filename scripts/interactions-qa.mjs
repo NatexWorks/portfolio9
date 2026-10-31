@@ -293,20 +293,95 @@ try {
   // Verify the local-discovery artwork is an actual WebGL globe, not the old flat SVG.
   activeRoute = "/work/local-discovery WebGL";
   await page.setViewportSize({ width: 1280, height: 900 });
+  const earthAssetResponses = [];
+  page.on("response", (response) => {
+    if (new URL(response.url()).pathname === "/earth-land.json") {
+      earthAssetResponses.push({ status: response.status(), bytes: Number(response.headers()["content-length"] || 0) });
+    }
+  });
   await page.goto(baseURL + "/work/local-discovery", { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(140);
   const globe = page.locator("[data-discovery-globe]").first();
   await globe.scrollIntoViewIfNeeded();
-  await page.waitForSelector("[data-discovery-globe] canvas", { timeout: 15000 }).catch(() => {});
+  await page.waitForSelector("[data-discovery-globe] canvas", { timeout: 20000 }).catch(() => {});
+  await page.waitForFunction(() => {
+    const node = document.querySelector("[data-discovery-globe]");
+    return node?.getAttribute("data-earth-texture-ready") === "true";
+  }, { timeout: 25000 }).catch(() => {});
+  await page.waitForFunction(() => {
+    const node = document.querySelector("[data-discovery-globe]");
+    return node?.getAttribute("data-webgl-ready") === "ready";
+  }, { timeout: 15000 }).catch(() => {});
   const globeState = await globe.evaluate((root) => {
     const canvas = root.querySelector("canvas");
-    if (!canvas) return { canvas: false, webgl: false, width: 0, height: 0 };
+    if (!canvas) {
+      return {
+        canvas: false, webgl: false, width: 0, height: 0,
+        textureReady: root.getAttribute("data-earth-texture-ready"),
+        landPolygons: Number(root.getAttribute("data-earth-land-polygons") || 0),
+        motion: root.getAttribute("data-earth-motion"),
+      };
+    }
     const context = canvas.getContext("webgl2") || canvas.getContext("webgl");
-    return { canvas: true, webgl: Boolean(context), width: canvas.width, height: canvas.height };
+    return {
+      canvas: true,
+      webgl: Boolean(context),
+      width: canvas.width,
+      height: canvas.height,
+      textureReady: root.getAttribute("data-earth-texture-ready"),
+      landPolygons: Number(root.getAttribute("data-earth-land-polygons") || 0),
+      webglReady: root.getAttribute("data-webgl-ready"),
+      motion: root.getAttribute("data-earth-motion"),
+      rotation: root.getAttribute("data-earth-rotation"),
+    };
   });
   if (!globeState.canvas || !globeState.webgl || globeState.width < 100 || globeState.height < 100) {
     failures.push("Earth did not initialise as a visible WebGL canvas: " + JSON.stringify(globeState));
   }
+  if (globeState.textureReady !== "true" || globeState.landPolygons < 80) {
+    failures.push("Earth's local geographic land texture did not load: " + JSON.stringify(globeState));
+  }
+  if (globeState.webglReady !== "ready" || globeState.motion !== "rotating") {
+    failures.push("Earth WebGL or rotation state did not become active: " + JSON.stringify(globeState));
+  }
+  if (!earthAssetResponses.some((response) => response.status === 200)) {
+    failures.push("Earth's local land geometry asset did not return HTTP 200");
+  }
+
+  const firstRotation = Number(globeState.rotation);
+  await page.waitForTimeout(800);
+  const secondRotation = Number(await globe.getAttribute("data-earth-rotation"));
+  const rotationChanged = Number.isFinite(firstRotation) && Number.isFinite(secondRotation) &&
+    Math.abs(secondRotation - firstRotation) > 0.001;
+  if (!rotationChanged) {
+    failures.push("Earth sphere did not rotate over time: first=" + globeState.rotation + ", second=" + secondRotation);
+  }
+
+  // Reduced motion keeps the 3D object available but pauses all continuous rotation.
+  const earthReducedContext = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+    reducedMotion: "reduce",
+  });
+  const earthReducedPage = await earthReducedContext.newPage();
+  earthReducedPage.on("pageerror", (error) => browserErrors.push("reduced-motion Earth: " + (error.stack || error.message)));
+  await earthReducedPage.goto(baseURL + "/work/local-discovery", { waitUntil: "domcontentloaded" });
+  const reducedGlobe = earthReducedPage.locator("[data-discovery-globe]").first();
+  await reducedGlobe.scrollIntoViewIfNeeded();
+  await earthReducedPage.waitForSelector("[data-discovery-globe] canvas", { timeout: 20000 }).catch(() => {});
+  await earthReducedPage.waitForFunction(() => {
+    const node = document.querySelector("[data-discovery-globe]");
+    return node?.getAttribute("data-earth-texture-ready") === "true";
+  }, { timeout: 25000 }).catch(() => {});
+  await earthReducedPage.waitForTimeout(550);
+  const reducedEarthState = await reducedGlobe.evaluate((root) => ({
+    motion: root.getAttribute("data-earth-motion"),
+    rotation: root.getAttribute("data-earth-rotation"),
+    textureReady: root.getAttribute("data-earth-texture-ready"),
+  }));
+  if (reducedEarthState.motion !== "paused" || reducedEarthState.rotation !== null ||
+      reducedEarthState.textureReady !== "true") {
+    failures.push("Reduced-motion Earth did not remain textured and paused: " + JSON.stringify(reducedEarthState));
+  }
+  await earthReducedContext.close();
 
   if (browserErrors.length) failures.push(...browserErrors.map((error) => "Uncaught browser error: " + error));
 
