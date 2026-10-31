@@ -107,7 +107,11 @@ try {
     // Focus it first, then click the revealed control to verify its destination.
     const skipLink = page.locator("a.skip-link");
     if (await skipLink.count()) {
-      await skipLink.focus();
+      // Focus the off-canvas skip link via the browser DOM; Playwright's
+      // focus action waits for a stable visible box, which its focus reveal animates.
+      await skipLink.evaluate((element) => element.focus({ preventScroll: true }));
+      const skipLinkFocused = await skipLink.evaluate((element) => element === document.activeElement);
+      if (!skipLinkFocused) failures.push(route + ": skip link could not receive keyboard focus");
       if (!(await skipLink.isVisible())) failures.push(route + ": skip link did not become visible on keyboard focus");
       // Same-document hash jumps do not create a full page navigation.
       // Dispatch the real anchor click without asking Playwright to await a load event.
