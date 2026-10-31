@@ -28,6 +28,12 @@ const browser = await chromium.launch({
   args: ["--enable-webgl", "--ignore-gpu-blocklist", "--use-gl=angle", "--use-angle=swiftshader"],
 });
 
+async function visit(page, route) {
+  const response = await page.goto(baseURL + route, { waitUntil: "commit", timeout: 15000 });
+  await page.locator("main h1").waitFor({ state: "visible", timeout: 12000 });
+  return response;
+}
+
 function parseTarget(href) {
   try {
     return new URL(href, baseURL);
@@ -63,7 +69,7 @@ try {
   // Visit every public route and click every visible same-site link individually.
   for (const route of routes) {
     activeRoute = route;
-    const response = await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
+    const response = await visit(page, route);
       await page.waitForTimeout(100);
     if (!response || response.status() >= 400) {
       failures.push(route + ": HTTP " + (response?.status() ?? "no response"));
@@ -143,7 +149,7 @@ try {
         }
       }
 
-      await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
+      await visit(page, route);
       const escapedHref = item.href.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
       const link = page.locator('a[href="' + escapedHref + '"]').nth(item.occurrence);
       const attached = await link.waitFor({ state: "attached", timeout: 7000 }).then(() => true).catch(() => false);
@@ -191,7 +197,7 @@ try {
   await mobile.setViewportSize({ width: 390, height: 820 });
   for (const route of routes) {
     activeRoute = route + " mobile menu";
-    await mobile.goto(baseURL + route, { waitUntil: "domcontentloaded" });
+    await visit(mobile, route);
     await mobile.waitForTimeout(120);
     const toggle = mobile.locator(".menu-toggle");
     if (!(await toggle.count())) continue;
@@ -211,7 +217,7 @@ try {
         failures.push(route + ": invalid mobile menu link " + href);
         continue;
       }
-      await mobile.goto(baseURL + route, { waitUntil: "domcontentloaded" });
+      await visit(mobile, route);
     await mobile.waitForTimeout(120);
       await mobile.locator(".menu-toggle").click();
       clickActions += 1;
@@ -225,7 +231,7 @@ try {
       }
     }
 
-    await mobile.goto(baseURL + route, { waitUntil: "domcontentloaded" });
+    await visit(mobile, route);
     await mobile.waitForTimeout(120);
     await mobile.locator(".menu-toggle").click();
     await mobile.keyboard.press("Escape");
@@ -240,7 +246,7 @@ try {
   // Click all visible non-menu buttons which are not form submit actions.
   for (const route of routes) {
     activeRoute = route + " buttons";
-    await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
+    await visit(page, route);
       await page.waitForTimeout(100);
     const buttons = await page.locator("button").evaluateAll((nodes) =>
       nodes.map((node, index) => {
@@ -259,7 +265,7 @@ try {
     for (const item of buttons) {
       if (!item.visible || item.menu || item.disabled || (item.submit && item.inForm)) continue;
       if (!item.label) failures.push(route + ": visible button is missing an accessible name");
-      await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
+      await visit(page, route);
       await page.waitForTimeout(100);
       const button = page.locator("button").nth(item.index);
       if (!(await button.isVisible().catch(() => false))) continue;
@@ -276,7 +282,7 @@ try {
   // Check required-field blocking and the successful email-draft handoff on both forms.
   for (const route of ["/contact", "/start-project"]) {
     activeRoute = route + " form";
-    await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
+    await visit(page, route);
       await page.waitForTimeout(100);
     const form = page.locator("form").first();
     const submit = form.locator('button[type="submit"]');
@@ -316,7 +322,7 @@ try {
       earthAssetResponses.push({ status: response.status(), bytes: Number(response.headers()["content-length"] || 0) });
     }
   });
-  await page.goto(baseURL + "/work/local-discovery", { waitUntil: "domcontentloaded" });
+  await visit(page, "/work/local-discovery");
   const globe = page.locator("[data-discovery-globe]").first();
   await globe.scrollIntoViewIfNeeded();
   await page.waitForSelector("[data-discovery-globe] canvas", { timeout: 20000 }).catch(() => {});
@@ -380,7 +386,7 @@ try {
   });
   const earthReducedPage = await earthReducedContext.newPage();
   earthReducedPage.on("pageerror", (error) => browserErrors.push("reduced-motion Earth: " + (error.stack || error.message)));
-  await earthReducedPage.goto(baseURL + "/work/local-discovery", { waitUntil: "domcontentloaded" });
+  await visit(earthReducedPage, "/work/local-discovery");
   const reducedGlobe = earthReducedPage.locator("[data-discovery-globe]").first();
   await reducedGlobe.scrollIntoViewIfNeeded();
   await earthReducedPage.waitForSelector("[data-discovery-globe] canvas", { timeout: 20000 }).catch(() => {});
