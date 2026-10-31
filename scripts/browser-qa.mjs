@@ -10,6 +10,7 @@ const routes = [
   "/work/inventory-management",
   "/work/local-discovery",
   "/work/cafe-presence",
+  "/inventory.html",
   "/about",
   "/contact",
   "/start-project",

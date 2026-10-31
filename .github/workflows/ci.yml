@@ -1,6 +1,9 @@
 name: Portfolio checks
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -38,8 +41,8 @@ jobs:
           npm run start -- --hostname 127.0.0.1 > /tmp/natexworks-next.log 2>&1 &
           echo $! > /tmp/natexworks-next.pid
           node -e 'const until = Date.now() + 90000; const tick = async () => { try { const r = await fetch("http://127.0.0.1:3000"); if (r.ok) process.exit(0); } catch {} if (Date.now() > until) { console.error("Next.js server did not become ready"); process.exit(1); } setTimeout(tick, 1000); }; tick();'
-      - name: Run responsive and accessibility browser checks
-        run: node scripts/browser-qa.mjs
+      - name: Run responsive, accessibility, and full click coverage
+        run: npm run test:browser
       - name: Upload browser QA screenshots
         if: always()
         uses: actions/upload-artifact@v4

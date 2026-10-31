@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "content:extract": "node scripts/extract-legacy-content.mjs",
-    "content:verify": "node scripts/verify-content.mjs"
+    "content:verify": "node scripts/verify-content.mjs",
+    "test:browser": "node scripts/browser-qa.mjs && node scripts/interactions-qa.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.1.2",

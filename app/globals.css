@@ -1327,26 +1327,54 @@ main { display: block; overflow: clip; }
   position: relative;
   width: 78%;
   aspect-ratio: 1;
-  overflow: hidden;
-  border: 1px solid rgba(163,207,231,.42);
+  overflow: visible;
+  border: 1px solid rgba(163,207,231,.34);
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 27%, #396d8f 0, #173c56 48%, #071523 78%);
-  box-shadow: 0 0 0 8px rgba(75,139,178,.04), 0 0 45px rgba(77,155,204,.26), inset -35px -10px 55px rgba(0,0,0,.55);
+  background: radial-gradient(circle at 34% 28%, #1d526a 0, #10364d 56%, #071523 82%);
+  box-shadow: 0 0 0 8px rgba(75,139,178,.04), 0 0 48px rgba(77,155,204,.3), inset -35px -10px 55px rgba(0,0,0,.34);
   transform-style: preserve-3d;
-  animation: discoveryEarthTurn 38s linear infinite;
 }
-.discovery-earth__globe svg { width: 100%; height: 100%; overflow: visible; }
-.discovery-earth__grid { transform-origin: center; }
-.discovery-earth__continents { fill: #577d78; opacity: .88; }
-.discovery-earth__routes { stroke-dasharray: 7 8; }
-.discovery-earth__city-lights { filter: drop-shadow(0 0 4px #ffc77e); }
-.discovery-earth__city-lights circle:nth-child(3n) { fill: #fff0c1; }
+.discovery-earth__globe::before {
+  position: absolute;
+  z-index: 2;
+  inset: -4%;
+  border: 1px solid rgba(137,199,235,.46);
+  border-radius: 50%;
+  content: "";
+  box-shadow: 0 0 24px rgba(85,160,208,.2), inset 10px 0 20px rgba(95,169,210,.08);
+  pointer-events: none;
+}
+.discovery-globe {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  border-radius: 50%;
+  transform-origin: center;
+  will-change: transform;
+}
+.discovery-globe canvas,
+.discovery-globe__fallback {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50%;
+}
+.discovery-globe canvas { outline: none; }
+.discovery-globe__fallback {
+  background:
+    radial-gradient(circle at 34% 28%, rgba(126,190,209,.5), transparent 47%),
+    radial-gradient(circle at 63% 70%, #0a1c30 0, #16445e 50%, #071523 78%);
+}
 .discovery-earth__atmosphere {
   position: absolute;
-  inset: -3%;
-  border: 1px solid rgba(137,199,235,.55);
+  z-index: 3;
+  inset: -5%;
+  border: 1px solid rgba(137,199,235,.34);
   border-radius: 50%;
-  box-shadow: inset 13px 0 22px rgba(95,169,210,.08), 0 0 22px rgba(85,160,208,.2);
+  box-shadow: 0 0 22px rgba(85,160,208,.2);
   pointer-events: none;
 }
 .discovery-earth__orbit {
