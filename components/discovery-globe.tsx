@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AdditiveBlending,
   BackSide,
@@ -166,14 +166,19 @@ function cityPosition(lon: number, lat: number, radius: number): [number, number
   ];
 }
 
-function Earth({ compact, animate, earthMap, cloudMap }: {
+function Earth({ compact, animate }: {
   compact: boolean;
   animate: boolean;
-  earthMap: CanvasTexture | null;
-  cloudMap: CanvasTexture | null;
 }) {
+  const earthMap = useMemo(() => createEarthTexture(), []);
+  const cloudMap = useMemo(() => createCloudTexture(), []);
   const planet = useRef<Group>(null);
   const cloudLayer = useRef<Group>(null);
+
+  useEffect(() => () => {
+    earthMap?.dispose();
+    cloudMap?.dispose();
+  }, [earthMap, cloudMap]);
 
   useFrame((state, delta) => {
     if (!animate) return;
@@ -252,11 +257,6 @@ export default function DiscoveryGlobe({ compact = false }: Props) {
   const [entered, setEntered] = useState(false);
   const [visible, setVisible] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [maps, setMaps] = useState<{ earth: CanvasTexture | null; clouds: CanvasTexture | null }>({
-    earth: null,
-    clouds: null,
-  });
-
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const updatePreference = () => setReducedMotion(preference.matches);
@@ -269,9 +269,11 @@ export default function DiscoveryGlobe({ compact = false }: Props) {
     const node = root.current;
     if (!node) return;
     if (!("IntersectionObserver" in window)) {
-      setEntered(true);
-      setVisible(true);
-      return;
+      const frame = window.requestAnimationFrame(() => {
+        setEntered(true);
+        setVisible(true);
+      });
+      return () => window.cancelAnimationFrame(frame);
     }
 
     const observer = new IntersectionObserver((entries) => {
@@ -282,17 +284,6 @@ export default function DiscoveryGlobe({ compact = false }: Props) {
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (!entered) return;
-    const earth = createEarthTexture();
-    const clouds = createCloudTexture();
-    setMaps({ earth, clouds });
-    return () => {
-      earth?.dispose();
-      clouds?.dispose();
-    };
-  }, [entered]);
 
   useEffect(() => {
     const node = root.current;
@@ -351,7 +342,7 @@ export default function DiscoveryGlobe({ compact = false }: Props) {
           <ambientLight intensity={0.82} />
           <directionalLight position={[3, 2.6, 4]} intensity={2.3} color="#fff1d7" />
           <pointLight position={[-3, -1, 2]} intensity={1.15} color="#4d9bc7" />
-          <Earth compact={compact} animate={!reducedMotion && visible} earthMap={maps.earth} cloudMap={maps.clouds} />
+          <Earth compact={compact} animate={!reducedMotion && visible} />
         </Canvas>
       ) : (
         <div className="discovery-globe__fallback" />
