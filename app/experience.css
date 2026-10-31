@@ -1,0 +1,152 @@
+:root {
+  --bg: #10120f;
+  --panel: #171a16;
+  --panel-secondary: #1d211b;
+  --line: #30352c;
+  --text: #f3f4ec;
+  --muted: #9b9f91;
+  --lime: #c5f36b;
+  --lime-dark: #a7d94c;
+  --ink: #171b12;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); }
+a, button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 4px; }
+
+#machine-slot { position: relative; }
+.natex-machine-dock { position: relative; width: min(100%, 1180px); margin: -2rem auto 0; padding: 0 5vw; color: #c5f36b; opacity: .78; }
+.machine-blueprint { display: block; width: min(100%, 720px); height: auto; margin-left: auto; filter: drop-shadow(0 0 20px #c5f36b12); }
+.machine-blueprint text { fill: #a6ad92; }
+.machine-draw { vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.machine-blueprint.is-drawn .machine-draw { animation: blueprintDraw 1.6s cubic-bezier(.2,.7,.2,1) forwards; }
+.machine-blueprint.is-drawn .machine-draw:nth-child(2) { animation-delay: .08s; }
+@keyframes blueprintDraw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .machine-blueprint.is-drawn .machine-draw { animation: none; stroke-dashoffset: 0; } }
+
+.assembly-section { position: relative; min-height: 100vh; padding: 7rem max(5vw, calc((100vw - 1280px)/2)); overflow: clip; border-block: 1px solid var(--line); background: radial-gradient(ellipse at 50% 55%, #28301d 0, #151812 44%, #10120f 76%); }
+.laptop-assembly { height: min(78vh, 800px); min-height: 450px; max-width: 1280px; margin: auto; position: relative; overflow: hidden; border: 1px solid #343b2d; background: #10120f; }
+.laptop-assembly canvas { width: 100% !important; height: 100% !important; display: block; }
+.laptop-assembly-fallback { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse, #25301c 0, #10120f 65%); color: var(--lime); }
+.laptop-assembly-fallback span { width: 14rem; height: 9rem; display: grid; place-items: center; border: 1px solid #899b62; font: 500 1.3rem "DM Mono", monospace; transform: perspective(800px) rotateX(10deg) rotateY(-14deg); box-shadow: 0 0 42px #c5f36b20; }
+.laptop-poster { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 2rem; color: var(--lime); background: radial-gradient(ellipse, #25301c 0, #10120f 65%); }
+.poster-device { position: relative; width: 12rem; height: 7rem; display: grid; place-items: center; border: 2px solid #83985a; transform: perspective(700px) rotateX(10deg) rotateY(-14deg); box-shadow: 0 0 42px #c5f36b20; }
+.poster-device::after { content: ""; position: absolute; width: 14rem; height: .5rem; border: 1px solid #83985a; bottom: -1rem; transform: skewX(-24deg); }
+.poster-device span { font: 500 1.2rem "DM Mono", monospace; }
+.laptop-poster i, .assembly-stages { font: 10px "DM Mono", monospace; letter-spacing: .13em; color: #a4ad90; font-style: normal; }
+.assembly-stages { position: absolute; left: 1.2rem; right: 1.2rem; bottom: 1rem; display: flex; justify-content: space-between; gap: .75rem; pointer-events: none; }
+.natex-cursor { position: fixed; z-index: 9999; top: -17px; left: -17px; width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--lime); border-radius: 50%; pointer-events: none; opacity: 0; transition: width .2s ease, height .2s ease, opacity .2s ease; will-change: transform; }
+body:hover .natex-cursor { opacity: .8; }
+.natex-cursor span { width: 4px; height: 4px; border-radius: 50%; background: var(--lime); }
+.natex-cursor.is-active { width: 48px; height: 48px; opacity: 1; }
+.natex-enter { display: inline-flex; align-items: center; gap: .7rem; padding: .75rem 1rem; border: 1px solid #46513a; border-radius: 999px; background: #171a16; color: var(--text); font: 600 .78rem Manrope, sans-serif; transition: border-color .2s ease, color .2s ease, transform .2s ease; }
+.natex-enter:hover { border-color: var(--lime); color: var(--lime); transform: translateY(-2px); }
+.natex-enter:focus-visible { outline-offset: 5px; }
+.experience-transition { position: fixed; z-index: 9998; inset: 0; pointer-events: none; display: grid; place-items: center; background: #c5f36b; clip-path: circle(0 at 50% 50%); animation: enterWipe .82s cubic-bezier(.76,0,.24,1) forwards; }
+.experience-transition span { width: 13vw; height: 1px; background: #10120f; opacity: .48; box-shadow: 0 0 0 1px #10120f11; }
+@keyframes enterWipe { 0% { clip-path: circle(0 at 50% 50%); } 35% { clip-path: circle(26vmax at 50% 50%); } 100% { clip-path: circle(150vmax at 50% 50%); } }
+.mobile-laptop-poster { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: .8rem; perspective: 650px; background: radial-gradient(ellipse, #25301c 0, #10120f 70%); }
+.mobile-laptop-screen { width: min(60vw, 330px); aspect-ratio: 1.7; display: grid; place-items: center; position: relative; border: 1px solid #a9c66d; border-radius: 8px 8px 3px 3px; background: linear-gradient(140deg, #182016, #0a0c09); color: var(--lime); transform: rotateX(4deg) rotateY(-7deg); box-shadow: 0 0 45px #c5f36b24; animation: laptopLift 1.3s cubic-bezier(.2,.7,.2,1) both; }
+.mobile-laptop-screen span { font: 500 clamp(1rem, 5vw, 1.8rem) "DM Mono", monospace; letter-spacing: .2em; }
+.mobile-laptop-screen i { position: absolute; inset: 18% 12%; border: 1px solid #c5f36b27; background: linear-gradient(90deg, transparent 49%, #c5f36b10 50%, transparent 51%); }
+.mobile-laptop-base { width: min(72vw, 390px); height: 13px; margin-top: -1.3rem; border: 1px solid #899b62; border-radius: 2px 2px 50% 50%; background: linear-gradient(#576245, #20251c); transform: rotateX(50deg) rotateZ(-2deg); animation: laptopLift 1.3s .1s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes laptopLift { from { opacity: 0; translate: 0 16px; } to { opacity: 1; translate: 0 0; } }
+
+/* Four complete service descriptions become balanced cards on wide screens. */
+@media (min-width: 900px) {
+  #main .service-detail-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding-block: 42px 60px;
+  }
+  #main .service-detail {
+    min-width: 0;
+    min-height: 310px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-content: start;
+    gap: 14px 18px;
+    padding: 23px;
+    border: 1px solid var(--line);
+    background: linear-gradient(145deg, #191d16, #131610);
+    box-shadow: 0 14px 30px #0002;
+    transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+  }
+  #main .service-detail:first-child { border-top: 1px solid var(--line); }
+  #main .service-detail:hover { transform: translateY(-4px); border-color: #596548; box-shadow: 0 20px 36px #0004; }
+  #main .service-detail-number { grid-row: 1 / span 2; }
+  #main .service-detail h2 { margin: 0; }
+  #main .service-detail p,
+  #main .service-detail ul { grid-column: 2; }
+  #main .service-detail ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+}
+
+/* Tablet and phone service cards rise in order and overlap naturally. */
+@media (max-width: 899px) and (prefers-reduced-motion: no-preference) {
+  #main .service-detail-list { display: block; padding-bottom: 20vh; }
+  #main .service-detail {
+    position: sticky;
+    top: calc(78px + var(--service-stack-index, 0) * 10px);
+    z-index: calc(var(--service-stack-index, 0) + 1);
+    min-height: 300px;
+    margin-bottom: 14px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    background: #141711;
+    box-shadow: 0 18px 36px #0005;
+  }
+  #main .service-detail:first-child { border-top: 1px solid var(--line); }
+  #main .service-detail:nth-child(1) { --service-stack-index: 0; }
+  #main .service-detail:nth-child(2) { --service-stack-index: 1; }
+  #main .service-detail:nth-child(3) { --service-stack-index: 2; }
+  #main .service-detail:nth-child(4) { --service-stack-index: 3; }
+}
+
+/* Tablet services use the same physical card stack as phones, with more room
+   for copy. Natural page scrolling remains in control of the stack. */
+@media (min-width: 651px) and (max-width: 899px) and (prefers-reduced-motion: no-preference) {
+  #services.services-section { position: relative; z-index: 1; isolation: isolate; }
+  #services .service-grid { display: block; position: relative; padding-bottom: 18vh; }
+  #services .service-grid > .service-card {
+    position: sticky;
+    top: calc(82px + var(--tablet-stack-index, 0) * 10px);
+    z-index: calc(var(--tablet-stack-index, 0) + 1);
+    min-height: 255px;
+    margin: 0 0 14px;
+    background: var(--bg);
+    box-shadow: 0 18px 36px #0004;
+    transform: none;
+    animation: none;
+    opacity: 1;
+  }
+  #services .service-grid > .service-card:nth-child(1) { --tablet-stack-index: 0; }
+  #services .service-grid > .service-card:nth-child(2) { --tablet-stack-index: 1; }
+  #services .service-grid > .service-card:nth-child(3) { --tablet-stack-index: 2; }
+  #services .service-grid > .service-card:nth-child(4) { --tablet-stack-index: 3; }
+}
+
+@media (max-width: 899px) {
+  .natex-cursor { display: none; }
+  .natex-machine-dock { margin-top: 1rem; padding-inline: 1.5rem; }
+  .machine-blueprint { max-width: 570px; }
+  .assembly-section { min-height: unset; padding: 5rem 1.25rem 3rem; }
+  .laptop-assembly { height: min(52vh, 480px); min-height: 290px; }
+  .assembly-stages { display: grid; grid-template-columns: repeat(3, 1fr); font-size: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #services .service-grid > .service-card { position: relative !important; top: auto !important; }
+}
+@media (max-width: 480px) {
+  .natex-machine-dock { padding-inline: 1rem; }
+  .machine-blueprint { width: 100%; }
+  .assembly-section { padding-inline: 1rem; }
+  .assembly-stages { gap: .4rem; font-size: 7px; letter-spacing: .04em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .natex-cursor { display: none; }
+  .experience-transition, .mobile-laptop-screen, .mobile-laptop-base { animation: none; }
+  #main .service-detail { position: relative !important; top: auto !important; }
+  #main .service-detail:hover { transform: none; }
+}

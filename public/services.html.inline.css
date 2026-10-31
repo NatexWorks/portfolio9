@@ -1,0 +1,295 @@
+
+    /* Fixed Next Section / Back to Top control for the services page. */
+    .services-scroll-next {
+      position:fixed; right:max(18px,calc((100vw - var(--wrap))/2)); bottom:22px; z-index:900;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 13px;
+      background:#171b14e8; border:1px solid #4b5540; color:var(--text);
+      font:8px var(--mono); letter-spacing:.09em; white-space:nowrap;
+      backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+      cursor:pointer; box-shadow:0 10px 28px #0004; transition:background .2s,border-color .2s,transform .2s,box-shadow .35s;
+      isolation:isolate; overflow:visible;
+    }
+    .services-scroll-next b { font:16px var(--sans); color:var(--lime); }
+    .services-scroll-next::before,.services-scroll-next::after {
+      content:""; position:absolute; top:6px; bottom:6px; width:13px; z-index:-1;
+      opacity:0; filter:blur(7px); pointer-events:none; background:var(--lime); border-radius:50%;
+    }
+    .services-scroll-next::before { left:-7px; }
+    .services-scroll-next::after { right:-7px; }
+    .services-scroll-next:hover { background:#242d1b; border-color:var(--lime); transform:translateY(-2px); }
+    .services-scroll-next:not(.is-back-top):hover::before { opacity:.75; animation:servicesGlowLeft 1.15s ease-in-out infinite alternate; }
+    .services-scroll-next:not(.is-back-top):hover::after { opacity:.75; animation:servicesGlowRight 1.15s ease-in-out infinite alternate; }
+    /* Back to Top changes only its border; its text and fill stay untouched. */
+    .services-scroll-next.is-back-top { border-color:var(--lime); }
+    .services-scroll-next.is-back-top:hover { background:#171b14e8; border-color:var(--lime); }
+    .services-scroll-next.is-back-top::before,.services-scroll-next.is-back-top::after { opacity:0; animation:none; }
+    .services-scroll-next:focus-visible { outline:1px solid var(--lime); outline-offset:4px; }
+    @keyframes servicesGlowLeft { from { transform:scaleY(.55); opacity:.45; } to { transform:scaleY(1.2) translateX(-3px); opacity:1; } }
+    @keyframes servicesGlowRight { from { transform:scaleY(.55); opacity:.45; } to { transform:scaleY(1.2) translateX(3px); opacity:1; } }
+    @media(max-width:650px) {
+      .services-scroll-next { right:12px; bottom:12px; padding:9px 10px; }
+      .services-scroll-next span { font-size:7px; }
+    }
+    @media(prefers-reduced-motion:reduce) {
+      .services-scroll-next,.services-scroll-next::before,.services-scroll-next::after { transition:none!important; animation:none!important; }
+    }
+
+    /* Desktop/tablet motion system for the Services page.
+       Leaves service-detail motion and all hover behavior untouched. */
+    @media (min-width:761px) {
+      /* The visibility disclaimer rises into view while a restrained lime glow drifts behind it. */
+      .js-motion .service-principle.reveal {
+        position:relative;
+        isolation:isolate;
+        overflow:hidden;
+        transform:translateY(30px) scale(.985);
+        filter:blur(7px);
+        transition:opacity .82s ease,transform .82s cubic-bezier(.16,.72,.12,1),filter .82s ease;
+      }
+      .js-motion .service-principle.reveal.is-visible {
+        transform:translateY(0) scale(1);
+        filter:blur(0);
+      }
+      .service-principle[data-services-motion="visibility-note"]::before {
+        content:"";
+        position:absolute;
+        z-index:0;
+        inset:-38% -18%;
+        pointer-events:none;
+        opacity:0;
+        background:
+          radial-gradient(ellipse at 22% 48%,rgba(197,243,107,.13),transparent 42%),
+          radial-gradient(ellipse at 82% 62%,rgba(197,243,107,.07),transparent 38%);
+        transform:translate3d(-3%,3%,0) scale(.96);
+      }
+      .service-principle[data-services-motion="visibility-note"] > * {
+        position:relative;
+        z-index:1;
+      }
+      .service-principle[data-services-motion="visibility-note"].is-in-view::before {
+        opacity:1;
+        animation:visibilityGlowDrift 1.7s cubic-bezier(.2,.7,.2,1) both;
+      }
+      .visibility-underline {
+        position:relative;
+        display:inline;
+        background-image:linear-gradient(var(--lime),var(--lime));
+        background-repeat:no-repeat;
+        background-position:left bottom;
+        background-size:0 1px;
+        transition:background-size .78s cubic-bezier(.2,.7,.2,1) .28s;
+      }
+      .service-principle[data-services-motion="visibility-note"].is-in-view .visibility-underline {
+        background-size:100% 1px;
+      }
+      @keyframes visibilityGlowDrift {
+        0% { opacity:0; transform:translate3d(-4%,4%,0) scale(.94); }
+        65% { opacity:1; }
+        100% { opacity:1; transform:translate3d(2%,-2%,0) scale(1.04); }
+      }
+      .services-page-hero > .eyebrow,
+      .services-page-hero h1,
+      .services-page-hero > p,
+      .services-page-hero .hero-actions {
+        opacity:0;
+        animation:servicesHeroReveal .68s cubic-bezier(.16,.72,.12,1) both;
+      }
+      .services-page-hero > .eyebrow { animation-delay:.02s; }
+      .services-page-hero h1 { animation-delay:.09s; }
+      .services-page-hero > p { animation-delay:.17s; }
+      .services-page-hero .hero-actions { animation-delay:.25s; }
+
+      .services-process {
+        display:block;
+        padding-top:28px;
+        padding-bottom:80px;
+      }
+      .services-process-heading {
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:40px;
+        margin-bottom:10px;
+      }
+      .services-process-heading h2 {
+        max-width:660px;
+        margin:17px 0 0;
+        font-size:clamp(32px,4.1vw,49px);
+        line-height:1.1;
+        letter-spacing:-.065em;
+      }
+      .services-process-heading > p {
+        max-width:330px;
+        margin:0 0 3px;
+        color:#9ea393;
+        font-size:12px;
+        line-height:1.85;
+      }
+      .services-process-list {
+        list-style:none;
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:28px;
+        position:relative;
+        margin:36px 0 0;
+        padding:0;
+      }
+      .services-process-list::before,
+      .services-process-list::after {
+        content:"";
+        position:absolute;
+        left:0;
+        top:12px;
+        height:1px;
+        pointer-events:none;
+      }
+      .services-process-list::before {
+        right:0;
+        background:#394130;
+      }
+      .services-process-list::after {
+        width:0;
+        background:var(--lime);
+        transition:width .85s cubic-bezier(.2,.7,.2,1);
+      }
+      .services-process-list.is-in-view::after { width:100%; }
+      .services-process-step {
+        position:relative;
+        min-width:0;
+        padding-top:38px;
+      }
+      .services-process-step::before {
+        content:"";
+        position:absolute;
+        top:6px;
+        left:0;
+        width:13px;
+        height:13px;
+        border:1px solid #68784e;
+        border-radius:50%;
+        background:var(--bg);
+        z-index:1;
+        transition:background .25s ease,border-color .25s ease,box-shadow .25s ease;
+      }
+      .services-process-step h3 {
+        margin:0 0 9px;
+        font-size:18px;
+        letter-spacing:-.04em;
+      }
+      .services-process-step p {
+        max-width:330px;
+        margin:0;
+        color:#a8b09d;
+        font-size:12px;
+        line-height:1.9;
+      }
+      .services-process-step .process-kicker {
+        display:block;
+        margin-bottom:10px;
+        color:var(--lime);
+        font:9px var(--mono);
+        letter-spacing:.08em;
+      }
+      .services-motion-on .services-process-step[data-services-motion],
+      .services-motion-on .site-footer[data-services-motion] {
+        opacity:0;
+        transform:translateY(14px);
+        transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1);
+      }
+      .services-motion-on .services-process-step[data-services-motion].is-in-view,
+      .services-motion-on .site-footer[data-services-motion].is-in-view {
+        opacity:1;
+        transform:translateY(0);
+      }
+      .services-motion-on .services-process-step[data-services-motion].is-in-view::before {
+        background:var(--lime);
+        border-color:var(--lime);
+        box-shadow:0 0 0 5px #c5f36b12;
+      }
+      .services-motion-on .services-process-step[data-services-motion="process-step"]:nth-child(2) { transition-delay:.08s; }
+      .services-motion-on .services-process-step[data-services-motion="process-step"]:nth-child(3) { transition-delay:.16s; }
+      .services-motion-on .site-footer[data-services-motion="footer"] {
+        transition-duration:.65s;
+        transition-delay:.06s;
+      }
+      .services-motion-on .service-page-contact .contact-card[data-services-motion="contact"] {
+        transform:translateY(22px) scale(.99);
+        transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1);
+      }
+      .services-motion-on .service-page-contact .contact-card[data-services-motion="contact"].is-in-view {
+        transform:translateY(0) scale(1);
+      }
+    }
+    @keyframes servicesHeroReveal {
+      from { opacity:0; transform:translateY(18px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+    @media(max-width:760px) {
+      /* Keep the existing phone page and its spacing/content unchanged. */
+      .services-process { display:none !important; }
+    }
+
+
+    /* Service descriptions: restore the four-card square layout on laptop/tablet.
+       Mobile keeps its existing stacked service-detail layout. */
+    @media (min-width:761px) {
+      .service-detail-list {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:18px;
+        align-items:stretch;
+        padding-block:42px 60px;
+      }
+      .service-detail-list > .service-detail {
+        display:flex;
+        flex-direction:column;
+        align-items:stretch;
+        gap:16px;
+        min-width:0;
+        aspect-ratio:1 / 1;
+        padding:clamp(22px,2.5vw,34px);
+        border:1px solid #30372b;
+        background:linear-gradient(145deg,#191e15,#12150f);
+        box-shadow:0 10px 24px rgba(0,0,0,.16);
+        transition:transform .3s ease,border-color .3s ease,background .3s ease,box-shadow .3s ease;
+      }
+      .service-detail-list > .service-detail:first-child { border-top:1px solid #30372b; }
+      .service-detail-list > .service-detail:hover {
+        transform:translateY(-4px);
+        border-color:#687d4d;
+        background:linear-gradient(145deg,#20281a,#151a12);
+        box-shadow:0 16px 32px rgba(0,0,0,.25);
+      }
+      .service-detail-number { padding-top:0; }
+      .service-detail-list > .service-detail > div { min-width:0; }
+      .service-detail-list .service-detail h2 {
+        margin-bottom:10px;
+        font-size:clamp(22px,2.3vw,31px);
+        line-height:1.2;
+      }
+      .service-detail-list .service-detail p {
+        max-width:none;
+        font-size:clamp(11px,.95vw,13px);
+        line-height:1.75;
+      }
+      .service-detail-list .service-detail ul {
+        margin-top:auto;
+        padding-top:14px;
+        font-size:clamp(10px,.85vw,11px);
+        line-height:1.9;
+      }
+    }
+    @media (min-width:761px) and (prefers-reduced-motion:reduce) {
+      .service-detail-list > .service-detail { transition:none; }
+      .service-detail-list > .service-detail:hover { transform:none; }
+    }
+
+    /* Match the 20px footer wordmark size used on index.html. */
+    .site-footer .brand > span:last-child { font-size:20px; line-height:1; }
+
+    /* Scroll-linked entrance only for the first three detailed services; JS disables it for reduced motion. */
+    .service-detail-list.services-scroll-motion-enabled > .service-detail:nth-child(-n+3) {
+      transition: none !important;
+      will-change: transform, opacity;
+    }
+  

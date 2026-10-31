@@ -1,0 +1,33 @@
+{
+  "name": "natexworks-setdemo",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "predev": "npm run content:extract && node scripts/prepare-public-assets.mjs",
+    "prebuild": "npm run content:extract && node scripts/prepare-public-assets.mjs",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "content:extract": "node scripts/extract-legacy-content.mjs",
+    "content:verify": "node scripts/verify-content.mjs"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.1.2",
+    "gsap": "^3.14.2",
+    "next": "^16.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.180.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.4.3",
+    "typescript": "^5.9.0"
+  }
+}

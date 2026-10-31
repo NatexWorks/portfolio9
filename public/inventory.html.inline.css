@@ -1,0 +1,13 @@
+
+    /* Match the index footer branding and keep the scroll control plain. */
+    .footer .brand > span:last-child { font-size:20px !important; line-height:1 !important; }
+    .scroll-next::before, .scroll-next::after { display:none !important; animation:none !important; }
+    .scroll-next, .scroll-next:hover, .scroll-next.is-back-top, .scroll-next.is-back-top:hover {
+      background:#171b14e8 !important;
+      border:1px solid var(--lime) !important;
+      color:var(--text) !important;
+      box-shadow:none !important;
+      transform:none !important;
+    }
+    .scroll-next { backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+  
