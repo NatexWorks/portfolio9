@@ -94,7 +94,10 @@ try {
     if (await skipLink.count()) {
       await skipLink.focus();
       if (!(await skipLink.isVisible())) failures.push(route + ": skip link did not become visible on keyboard focus");
-      await skipLink.click();
+      // Same-document hash jumps do not create a full page navigation.
+      // Dispatch the real anchor click without asking Playwright to await a load event.
+      await skipLink.evaluate((element) => element.click());
+      await page.waitForFunction(() => window.location.hash === "#main-content", null, { timeout: 2500 });
       if (new URL(page.url()).hash !== "#main-content") {
         failures.push(route + ": skip link did not navigate to #main-content");
       } else {
