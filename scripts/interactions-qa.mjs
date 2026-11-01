@@ -224,7 +224,9 @@ try {
           await assertDestination(page, expected, route + " link " + item.href);
           const documentTimeOriginAfter = await page.evaluate(() => performance.timeOrigin);
           if (documentTimeOriginBefore !== documentTimeOriginAfter) {
-            documentReloadsObserved.push({ route, href: item.href });
+            const reload = { route, href: item.href };
+            documentReloadsObserved.push(reload);
+            failures.push("Unexpected full document reload for an internal link: " + JSON.stringify(reload));
           }
         }
         routeClicks += 1;
