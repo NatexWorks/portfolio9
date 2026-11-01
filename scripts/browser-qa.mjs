@@ -11,6 +11,8 @@ const routes = [
   "/work/local-discovery",
   "/work/cafe-presence",
   "/inventory.html",
+  "/services.html",
+  "/index.html",
   "/about",
   "/contact",
   "/start-project",
@@ -23,6 +25,23 @@ await mkdir("artifacts/browser-qa", { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
 try {
+  // Discover additional indexable public routes from the generated sitemap.
+  const discoveryPage = await browser.newPage();
+  const sitemapResponse = await discoveryPage.request.get(baseURL + "/sitemap.xml");
+  if (sitemapResponse.ok()) {
+    const sitemapXml = await sitemapResponse.text();
+    const discovered = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)]
+      .map((match) => new URL(match[1], baseURL))
+      .filter((url) => url.origin === new URL(baseURL).origin)
+      .map((url) => url.pathname);
+    for (const pathname of discovered) {
+      if (!routes.includes(pathname)) routes.push(pathname);
+    }
+  } else {
+    failures.push("Sitemap discovery returned HTTP " + sitemapResponse.status());
+  }
+  await discoveryPage.close();
+
   for (const route of routes) {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 1000 },
@@ -36,7 +55,16 @@ try {
 
     const response = await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) {
-      failures.push(route + ": expected HTTP 200, got " + (response?.status() ?? "no response"));
+      failures.push(route + ": expected final HTTP 200, got " + (response?.status() ?? "no response"));
+    }
+
+    const expectedRedirects = {
+      "/inventory.html": "/work/inventory-management",
+      "/services.html": "/services",
+      "/index.html": "/",
+    };
+    if (expectedRedirects[route] && new URL(page.url()).pathname !== expectedRedirects[route]) {
+      failures.push(route + ": expected redirect to " + expectedRedirects[route] + ", landed on " + new URL(page.url()).pathname);
     }
 
     if (route === "/") {

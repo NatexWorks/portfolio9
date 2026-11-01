@@ -12,6 +12,8 @@ const routes = [
   "/contact",
   "/start-project",
   "/inventory.html",
+  "/services.html",
+  "/index.html",
 ];
 const failures = [];
 const browserErrors = [];
@@ -21,6 +23,7 @@ let mobileMenuLinksClicked = 0;
 let buttonsClicked = 0;
 let clickActions = 0;
 let externalTargetsValidated = 0;
+const documentReloadsObserved = [];
 let activeRoute = "initial";
 
 const browser = await chromium.launch({
@@ -29,7 +32,27 @@ const browser = await chromium.launch({
 });
 
 async function visit(page, route) {
-  const response = await page.goto(baseURL + route, { waitUntil: "commit", timeout: 15000 });
+  const target = new URL(baseURL + route);
+  const current = new URL(page.url());
+
+  // A skip-link or same-page anchor can change only the hash. Reset that
+  // fragment in place instead of forcing a redundant full document reload.
+  if (
+    current.origin === target.origin &&
+    current.pathname === target.pathname &&
+    current.search === target.search
+  ) {
+    if (current.hash) {
+      await page.evaluate(() => {
+        window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+      });
+    }
+    await page.locator("main h1").waitFor({ state: "visible", timeout: 12000 });
+    await page.locator("a.skip-link").waitFor({ state: "attached", timeout: 12000 });
+    return null;
+  }
+
+  const response = await page.goto(target.toString(), { waitUntil: "domcontentloaded", timeout: 15000 });
   await page.locator("main h1").waitFor({ state: "visible", timeout: 12000 });
   // The shared shell is hydrated before per-link interactions begin.
   await page.locator("a.skip-link").waitFor({ state: "attached", timeout: 12000 });
@@ -115,7 +138,7 @@ try {
       if (!(await skipLink.isVisible())) failures.push(route + ": skip link did not become visible on keyboard focus");
       // Same-document hash jumps do not create a full page navigation.
       // Dispatch the real anchor click without asking Playwright to await a load event.
-      await skipLink.evaluate((element) => element.click());
+      await skipLink.click({ force: true, noWaitAfter: true });
       await page.waitForFunction(() => window.location.hash === "#main-content", null, { timeout: 2500 });
       if (new URL(page.url()).hash !== "#main-content") {
         failures.push(route + ": skip link did not navigate to #main-content");
@@ -176,7 +199,7 @@ try {
         const popupPromise = item.target === "_blank"
           ? context.waitForEvent("page", { timeout: 5000 }).catch(() => null)
           : null;
-        await link.evaluate((element) => element.click());
+        await link.click({ force: true, noWaitAfter: true });
 
         if (item.target === "_blank") {
           const popup = await popupPromise;
@@ -192,6 +215,10 @@ try {
           }
         } else {
           await assertDestination(page, expected, route + " link " + item.href);
+          const documentTimeOriginAfter = await page.evaluate(() => performance.timeOrigin);
+          if (documentTimeOriginBefore !== documentTimeOriginAfter) {
+            documentReloadsObserved.push({ route, href: item.href });
+          }
         }
         routeClicks += 1;
         internalLinksClicked += 1;
@@ -234,7 +261,7 @@ try {
       await mobile.locator(".menu-toggle").click();
       clickActions += 1;
       try {
-        await mobile.locator("#mobile-navigation a[href]").nth(index).evaluate((element) => element.click());
+        await mobile.locator("#mobile-navigation a[href]").nth(index).click({ force: true, noWaitAfter: true });
         await assertDestination(mobile, expected, route + " mobile menu " + href);
         mobileMenuLinksClicked += 1;
         clickActions += 1;
@@ -305,16 +332,23 @@ try {
     }
 
     await form.locator('input[name="name"]').fill("Playwright QA");
-    await form.locator('input[name="email"]').fill("qa@example.com");
+    await form.locator('input[name="email"]').fill("not-an-email");
     if (route === "/contact") {
       await form.locator('textarea[name="message"]').fill("Testing the project enquiry flow from the full-site Playwright suite.");
     } else {
       await form.locator('select[name="type"]').selectOption("Business website");
       await form.locator('textarea[name="goal"]').fill("Make the primary website journey clearer and easier to complete.");
     }
+    await submit.click();
+    clickActions += 1;
+    if ((await form.locator(":invalid").count()) === 0) {
+      failures.push(route + ": invalid email address was not blocked");
+    }
+
+    await form.locator('input[name="email"]').fill("qa@example.com");
     // The submit handler deliberately opens a mailto: URL. Trigger the real
     // button click without waiting for an external mail application navigation.
-    await submit.evaluate((element) => element.click());
+    await submit.click({ force: true, noWaitAfter: true });
     clickActions += 1;
     const status = await form.locator('[role="status"]').textContent();
     if (!status || !status.includes("email app")) {
@@ -322,6 +356,20 @@ try {
     }
     if (new URL(page.url()).pathname !== route) {
       failures.push(route + ": form navigated away during email-draft handoff");
+    }
+  }
+
+  // Verify the three supported query-string project prefills without sending an enquiry.
+  for (const [project, expectedType] of [
+    ["inventory-management", "Inventory / business application"],
+    ["cafe-presence", "Café / business website"],
+    ["local-discovery", "Local SEO foundations"],
+  ]) {
+    activeRoute = "/start-project?project=" + project;
+    await visit(page, "/start-project?project=" + project);
+    const selectedType = await page.locator('select[name="type"]').inputValue();
+    if (selectedType !== expectedType) {
+      failures.push("Project query prefill " + project + ": expected " + expectedType + ", received " + selectedType);
     }
   }
 
@@ -428,6 +476,7 @@ try {
     otherButtonsClicked: buttonsClicked,
     clickActions,
     emailAndExternalLinksValidatedNotLaunched: externalTargetsValidated,
+    documentReloadsObserved,
     globe: globeState,
     routeResults,
     browserErrors,

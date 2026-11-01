@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { buildProjectMailto } from "@/lib/contact-mailto";
 
 type ProjectEnquiryFormProps = { initialProjectType?: string };
 
@@ -15,27 +16,13 @@ export default function ProjectEnquiryForm({ initialProjectType = "" }: ProjectE
     const data = new FormData(form);
     const name = String(data.get("name") || "").trim();
     const email = String(data.get("email") || "").trim();
-    const business = String(data.get("business") || "").trim() || "Not provided";
-    const type = String(data.get("type") || "Not sure yet");
-    const budget = String(data.get("budget") || "Not specified");
-    const goal = String(data.get("goal") || "").trim();
-    const details = String(data.get("details") || "").trim();
-    const subject = encodeURIComponent(`Project enquiry — ${type} — ${name}`);
-    const body = encodeURIComponent([
-      `Name: ${name}`,
-      `Email: ${email}`,
-      `Business / project: ${business}`,
-      `Project type: ${type}`,
-      `Estimated budget: ${budget}`,
-      "",
-      "What I want to build:",
-      goal,
-      "",
-      "Additional details:",
-      details || "Not provided"
-    ].join("\n"));
+    const business = String(data.get("business") || "");
+    const type = String(data.get("type") || "");
+    const budget = String(data.get("budget") || "");
+    const goal = String(data.get("goal") || "");
+    const details = String(data.get("details") || "");
     setStatus("Your email app should open with the enquiry filled in. Review the draft and press Send to complete the enquiry.");
-    window.location.href = `mailto:natexworks@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = buildProjectMailto({ name, email, business, type, budget, goal, details });
   }
 
   return (
