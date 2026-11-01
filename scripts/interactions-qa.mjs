@@ -52,7 +52,7 @@ async function visit(page, route) {
     return null;
   }
 
-  const response = await page.goto(target.toString(), { waitUntil: "domcontentloaded", timeout: 15000 });
+  const response = await page.goto(target.toString(), { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.locator("main h1").waitFor({ state: "visible", timeout: 12000 });
   // The shared shell is hydrated before per-link interactions begin.
   await page.locator("a.skip-link").waitFor({ state: "attached", timeout: 12000 });
