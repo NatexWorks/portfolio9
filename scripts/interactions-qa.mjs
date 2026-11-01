@@ -140,9 +140,9 @@ try {
       const skipLinkFocused = await skipLink.evaluate((element) => element === document.activeElement);
       if (!skipLinkFocused) failures.push(route + ": skip link could not receive keyboard focus");
       if (!(await skipLink.isVisible())) failures.push(route + ": skip link did not become visible on keyboard focus");
-      // Same-document hash jumps do not create a full page navigation.
-      // Dispatch the real anchor click without asking Playwright to await a load event.
-      await skipLink.click({ force: true, noWaitAfter: true });
+      // Activate the focused anchor with Enter, as a keyboard user would.
+      // This also avoids pointer hit-testing on the intentionally off-canvas link.
+      await page.keyboard.press("Enter");
       await page.waitForFunction(() => window.location.hash === "#main-content", null, { timeout: 2500 });
       if (new URL(page.url()).hash !== "#main-content") {
         failures.push(route + ": skip link did not navigate to #main-content");
