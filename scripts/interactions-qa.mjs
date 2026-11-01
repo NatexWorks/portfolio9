@@ -196,6 +196,9 @@ try {
           element.scrollIntoView({ block: "center", behavior: "instant" });
         });
         await page.waitForTimeout(60);
+        const documentTimeOriginBefore = item.target === "_blank"
+          ? null
+          : await page.evaluate(() => performance.timeOrigin);
         const popupPromise = item.target === "_blank"
           ? context.waitForEvent("page", { timeout: 5000 }).catch(() => null)
           : null;
