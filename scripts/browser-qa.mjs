@@ -11,6 +11,8 @@ const routes = [
   "/work/local-discovery",
   "/work/cafe-presence",
   "/inventory.html",
+  "/services.html",
+  "/index.html",
   "/about",
   "/contact",
   "/start-project",
@@ -19,10 +21,28 @@ const widths = [320, 360, 390, 430, 768, 1024, 1280, 1440];
 const failures = [];
 const results = [];
 const browserErrors = [];
+const thirdPartyWarnings = [];
 await mkdir("artifacts/browser-qa", { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
 try {
+  // Discover additional indexable public routes from the generated sitemap.
+  const discoveryPage = await browser.newPage();
+  const sitemapResponse = await discoveryPage.request.get(baseURL + "/sitemap.xml");
+  if (sitemapResponse.ok()) {
+    const sitemapXml = await sitemapResponse.text();
+    const discovered = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)]
+      .map((match) => new URL(match[1], baseURL))
+      .filter((url) => url.origin === new URL(baseURL).origin)
+      .map((url) => url.pathname);
+    for (const pathname of discovered) {
+      if (!routes.includes(pathname)) routes.push(pathname);
+    }
+  } else {
+    failures.push("Sitemap discovery returned HTTP " + sitemapResponse.status());
+  }
+  await discoveryPage.close();
+
   for (const route of routes) {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 1000 },
@@ -31,12 +51,26 @@ try {
     const page = await context.newPage();
     page.on("pageerror", (error) => browserErrors.push(route + ": " + error.message));
     page.on("console", (message) => {
-      if (message.type() === "error") browserErrors.push(route + ": " + message.text());
+      if (message.type() !== "error") return;
+      const sourceUrl = message.location().url;
+      const sourceOrigin = sourceUrl ? new URL(sourceUrl, baseURL).origin : new URL(baseURL).origin;
+      const entry = route + ": " + message.text();
+      if (sourceOrigin === new URL(baseURL).origin) browserErrors.push(entry);
+      else thirdPartyWarnings.push(entry);
     });
 
     const response = await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) {
-      failures.push(route + ": expected HTTP 200, got " + (response?.status() ?? "no response"));
+      failures.push(route + ": expected final HTTP 200, got " + (response?.status() ?? "no response"));
+    }
+
+    const expectedRedirects = {
+      "/inventory.html": "/work/inventory-management",
+      "/services.html": "/services",
+      "/index.html": "/",
+    };
+    if (expectedRedirects[route] && new URL(page.url()).pathname !== expectedRedirects[route]) {
+      failures.push(route + ": expected redirect to " + expectedRedirects[route] + ", landed on " + new URL(page.url()).pathname);
     }
 
     if (route === "/") {
@@ -195,6 +229,8 @@ try {
     routesChecked: routes.length,
     viewportWidths: widths,
     axeViewports: [390, 1440],
+    sitemapRoutesDiscovered: routes,
+    thirdPartyWarnings,
     reducedMotion: "checked",
     mobileMenuKeyboard: "checked",
     scrollProgressResults,

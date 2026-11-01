@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { buildContactMailto } from "@/lib/contact-mailto";
 
 export default function ContactForm() {
   const [status, setStatus] = useState("");
@@ -15,10 +16,8 @@ export default function ContactForm() {
       setStatus("Please complete your name, email, and project details.");
       return;
     }
-    const subject = encodeURIComponent("Project enquiry — " + name);
-    const body = encodeURIComponent("Name: " + name + "\nEmail: " + email + "\nProject type: " + type + "\n\n" + message);
     setStatus("Your email app should open with the enquiry filled in. Review it and press Send to complete the message.");
-    window.location.href = "mailto:natexworks@gmail.com?subject=" + subject + "&body=" + body;
+    window.location.href = buildContactMailto({ name, email, type, message });
   }
   return (
     <form className="enquiry-form" onSubmit={handleSubmit}>

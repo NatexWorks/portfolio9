@@ -22,31 +22,48 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Install dependencies
+      - name: Install project dependencies
         run: npm ci
+      - name: Install temporary QA tooling
+        run: >-
+          npm install --no-save --package-lock=false
+          vitest@3.2.4
+          jsdom@26.1.0
+          @testing-library/react@16.3.0
+          @testing-library/user-event@14.6.1
+          @testing-library/jest-dom@6.9.1
+          playwright
+          @axe-core/playwright
+          @lhci/cli
       - name: Lint
         run: npm run lint
       - name: Type check
         run: npm run typecheck
+      - name: Unit and component tests
+        run: npm run test:unit
       - name: Production build
         run: npm run build
         env:
           NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
-      - name: Install browser QA tooling
-        run: npm install --no-save --package-lock=false playwright @axe-core/playwright
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Locate Chromium for Lighthouse
+        run: echo "CHROME_PATH=$(find "$HOME/.cache/ms-playwright" -type f -name chrome | head -n 1)" >> "$GITHUB_ENV"
       - name: Start production server
         run: |
           npm run start -- --hostname 127.0.0.1 > /tmp/natexworks-next.log 2>&1 &
           echo $! > /tmp/natexworks-next.pid
           node -e 'const until = Date.now() + 90000; const tick = async () => { try { const r = await fetch("http://127.0.0.1:3000"); if (r.ok) process.exit(0); } catch {} if (Date.now() > until) { console.error("Next.js server did not become ready"); process.exit(1); } setTimeout(tick, 1000); }; tick();'
-      - name: Run responsive, accessibility, and full click coverage
+      - name: Run responsive, accessibility, interaction, redirect, and network checks
         run: npm run test:browser
-      - name: Upload browser QA screenshots
+      - name: Run Lighthouse CI on representative mobile routes
+        run: npx lhci autorun --config=./.lighthouserc.cjs
+      - name: Upload browser and Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: portfolio-browser-qa
-          path: artifacts/browser-qa/
+          name: portfolio-qa-reports
+          path: |
+            artifacts/browser-qa/
+            artifacts/lighthouse/
           if-no-files-found: ignore
