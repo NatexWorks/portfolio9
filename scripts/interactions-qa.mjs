@@ -109,6 +109,8 @@ try {
         const seen = new Map();
         return [...document.querySelectorAll("a[href]")].map((anchor, index) => {
           const style = getComputedStyle(anchor);
+          const rect = anchor.getBoundingClientRect();
+          const hiddenByAria = Boolean(anchor.closest('[aria-hidden="true"]'));
           const href = anchor.getAttribute("href") || "";
           const occurrence = seen.get(href) || 0;
           seen.set(href, occurrence + 1);
@@ -118,7 +120,9 @@ try {
             href,
             target: anchor.getAttribute("target") || "",
             skipLink: anchor.classList.contains("skip-link"),
-            visible: Boolean(anchor.getClientRects().length) && style.display !== "none" && style.visibility !== "hidden",
+            visible: rect.width > 0 && rect.height > 0 &&
+              style.display !== "none" && style.visibility !== "hidden" &&
+              Number(style.opacity) > 0.01 && !hiddenByAria,
           };
         });
       })(),

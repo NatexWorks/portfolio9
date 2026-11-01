@@ -21,6 +21,7 @@ const widths = [320, 360, 390, 430, 768, 1024, 1280, 1440];
 const failures = [];
 const results = [];
 const browserErrors = [];
+const thirdPartyWarnings = [];
 await mkdir("artifacts/browser-qa", { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
@@ -50,7 +51,12 @@ try {
     const page = await context.newPage();
     page.on("pageerror", (error) => browserErrors.push(route + ": " + error.message));
     page.on("console", (message) => {
-      if (message.type() === "error") browserErrors.push(route + ": " + message.text());
+      if (message.type() !== "error") return;
+      const sourceUrl = message.location().url;
+      const sourceOrigin = sourceUrl ? new URL(sourceUrl, baseURL).origin : new URL(baseURL).origin;
+      const entry = route + ": " + message.text();
+      if (sourceOrigin === new URL(baseURL).origin) browserErrors.push(entry);
+      else thirdPartyWarnings.push(entry);
     });
 
     const response = await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
@@ -223,6 +229,8 @@ try {
     routesChecked: routes.length,
     viewportWidths: widths,
     axeViewports: [390, 1440],
+    sitemapRoutesDiscovered: routes,
+    thirdPartyWarnings,
     reducedMotion: "checked",
     mobileMenuKeyboard: "checked",
     scrollProgressResults,
