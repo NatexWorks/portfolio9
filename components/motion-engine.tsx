@@ -1,15 +1,53 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 export default function MotionEngine() {
   const pathname = usePathname();
-  useEffect(() => {
+  // ScrollTrigger pins elements by moving them into spacer wrappers. Capture
+  // same-site navigation and revert the active context before Next.js changes route DOM.
+  useLayoutEffect(() => {
     let cancelled = false;
     let dispose: () => void = () => {};
+    const stopCurrentMotion = () => {
+      // This can run once from the capture-phase click handler and again when
+      // Next.js commits the new pathname. Reverting GSAP twice can make
+      // ScrollTrigger remove a pin spacer that has already been detached by React.
+      if (cancelled) return;
+      cancelled = true;
+      const cleanup = dispose;
+      dispose = () => {};
+      cleanup();
+    };
+    const handleInternalNavigation = (event: MouseEvent) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target instanceof Element ? event.target : null;
+      const anchor = target?.closest<HTMLAnchorElement>("a[href]");
+      if (!anchor || anchor.hasAttribute("download") || (anchor.target && anchor.target !== "_self")) return;
+      let destination: URL;
+      try {
+        destination = new URL(anchor.href, window.location.href);
+      } catch {
+        return;
+      }
+      if (destination.origin !== window.location.origin) return;
+      if (destination.pathname === window.location.pathname && destination.search === window.location.search) return;
+      stopCurrentMotion();
+    };
+    const handleHistoryNavigation = () => stopCurrentMotion();
+    const removeNavigationListeners = () => {
+      document.removeEventListener("click", handleInternalNavigation, true);
+      window.removeEventListener("popstate", handleHistoryNavigation);
+    };
+    const cleanupEffect = () => {
+      removeNavigationListeners();
+      stopCurrentMotion();
+    };
+    document.addEventListener("click", handleInternalNavigation, true);
+    window.addEventListener("popstate", handleHistoryNavigation, true);
     const hasMotionTargets = document.querySelector(".hero-story, .service-transform, .work-gallery, .about-hero-visual, [data-workflow-desktop], [data-process-story], [data-local-signal-field], [data-parallax], .case-study__visual, [data-reveal], [data-mobile-reveal]");
-    if (!hasMotionTargets) return;
-    if (!window.matchMedia("(min-width: 900px) and (prefers-reduced-motion: no-preference)").matches) return;
+    if (!hasMotionTargets) return cleanupEffect;
+    if (!window.matchMedia("(min-width: 900px) and (prefers-reduced-motion: no-preference)").matches) return cleanupEffect;
     Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([gsapModule, triggerModule]) => {
       if (cancelled) return;
       const gsap = gsapModule.gsap;
@@ -209,7 +247,7 @@ export default function MotionEngine() {
     }).catch(() => {
       // All content remains available without the optional animation bundle.
     });
-    return () => { cancelled = true; dispose(); };
+    return cleanupEffect;
   }, [pathname]);
 
   useEffect(() => {
