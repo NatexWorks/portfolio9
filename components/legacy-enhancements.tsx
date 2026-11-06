@@ -23,6 +23,7 @@ function loadScript(src: string) {
 export default function LegacyEnhancements({ page }: { page: PageName }) {
   useEffect(() => {
     let live = true;
+    let navigationStarted = false;
     const external = page === "inventory.html" ? ["/inventory.js"] : ["/script.js"];
     const mountRoots: ReturnType<typeof createRoot>[] = [];
     let assemblyObserver: IntersectionObserver | undefined;
@@ -55,9 +56,9 @@ export default function LegacyEnhancements({ page }: { page: PageName }) {
       const setupStory = () => {
         storyCleanup?.();
         storyCleanup = undefined;
-        if (!storyMedia?.matches) return;
+        if (navigationStarted || !storyMedia?.matches) return;
         void Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([{ gsap }, { ScrollTrigger }]) => {
-          if (!live || !storyMedia?.matches) return;
+          if (!live || navigationStarted || !storyMedia?.matches) return;
           gsap.registerPlugin(ScrollTrigger);
           const work = document.querySelector<HTMLElement>("#work.work-section");
           const feature = document.querySelector<HTMLElement>(".feature-band");
@@ -87,6 +88,13 @@ export default function LegacyEnhancements({ page }: { page: PageName }) {
       storyMedia.addEventListener("change", setupStory);
       setupStory();
     }
+    const handleBeforeRouteChange = () => {
+      if (navigationStarted) return;
+      navigationStarted = true;
+      storyCleanup?.();
+      storyCleanup = undefined;
+    };
+    window.addEventListener("natex:before-route-change", handleBeforeRouteChange);
     void (async () => {
       try {
         await loadScript(`/${page}.inline.js`);
@@ -97,6 +105,8 @@ export default function LegacyEnhancements({ page }: { page: PageName }) {
     })();
     return () => {
       live = false;
+      window.removeEventListener("natex:before-route-change", handleBeforeRouteChange);
+      handleBeforeRouteChange();
       storyCleanup?.();
       if (storyMedia && storyMediaHandler) storyMedia.removeEventListener("change", storyMediaHandler);
       assemblyObserver?.disconnect();

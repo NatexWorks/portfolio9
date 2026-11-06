@@ -15,6 +15,11 @@ export default function MotionEngine() {
       // ScrollTrigger remove a pin spacer that has already been detached by React.
       if (cancelled) return;
       cancelled = true;
+      // Let legacy page scripts and their independent GSAP contexts release
+      // pinned DOM before Next.js/React removes the current route. Keep this
+      // event synchronous: ScrollTrigger pin spacers must be reverted while
+      // the original elements are still attached to their React-owned parent.
+      window.dispatchEvent(new Event("natex:before-route-change"));
       const cleanup = dispose;
       dispose = () => {};
       cleanup();
