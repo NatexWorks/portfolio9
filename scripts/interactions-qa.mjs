@@ -74,6 +74,7 @@ try {
     const summary = await page.evaluate(() => ({
       title: document.title,
       h1Count: document.querySelectorAll("main h1").length,
+      ids: [...document.querySelectorAll("[id]")].map((element) => element.id),
       links: [...document.querySelectorAll("a[href]")].map((anchor, index) => {
         const style = getComputedStyle(anchor);
         return {
@@ -125,8 +126,7 @@ try {
 
       if (expected.hash && expected.pathname === new URL(baseURL + route).pathname) {
         const id = decodeURIComponent(expected.hash.slice(1));
-        if (route === "/") await page.waitForSelector("#" + id, { timeout: 5000 }).catch(() => {});
-        const exists = await page.evaluate((targetId) => Boolean(document.getElementById(targetId)), id);
+        const exists = summary.ids.includes(id);
         if (!exists) {
           failures.push(route + ": broken in-page anchor " + expected.hash);
           continue;
@@ -290,6 +290,45 @@ try {
     }
   }
 
+  // Regression coverage for client-side navigation away from desktop routes whose
+  // GSAP ScrollTriggers use pinned elements and temporary spacer wrappers.
+  const navigationRegressions = [];
+  const navigationContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const navigationPage = await navigationContext.newPage();
+  navigationPage.on("pageerror", (error) => {
+    browserErrors.push("desktop navigation regression: " + (error.stack || error.message));
+  });
+  const pinnedRouteTransitions = [
+    { from: "/", selector: ".hero-actions a[href=\"/work\"]", to: "/work", label: "homepage hero → work" },
+    { from: "/services", selector: "a.service-proof-link[href=\"/work/inventory-management\"]", to: "/work/inventory-management", label: "services pinned section → inventory project" },
+    { from: "/work", selector: ".work-card__link[href=\"/work/inventory-management\"]", to: "/work/inventory-management", label: "work gallery → inventory project" },
+  ];
+
+  for (const transition of pinnedRouteTransitions) {
+    activeRoute = "navigation regression " + transition.label;
+    await navigationPage.goto(baseURL + transition.from, { waitUntil: "domcontentloaded" });
+    await navigationPage.waitForTimeout(1800);
+    const link = navigationPage.locator(transition.selector).first();
+    if (!(await link.count())) {
+      failures.push(transition.label + ": navigation link not found");
+      continue;
+    }
+    await link.click({ timeout: 7000 });
+    await navigationPage.waitForURL((url) => url.pathname === transition.to, { timeout: 9000 }).catch(() => {});
+    await navigationPage.waitForTimeout(250);
+    const destination = await navigationPage.evaluate(() => ({
+      path: window.location.pathname,
+      title: document.title,
+      h1Count: document.querySelectorAll("main h1").length,
+      errorScreen: document.body.innerText.includes("This page couldn’t load"),
+    }));
+    navigationRegressions.push({ ...transition, ...destination });
+    if (destination.path !== transition.to || !destination.title || destination.h1Count !== 1 || destination.errorScreen) {
+      failures.push(transition.label + ": client-side navigation did not render the destination correctly");
+    }
+  }
+  await navigationContext.close();
+
   // Verify the local-discovery artwork is an actual WebGL globe, not the old flat SVG.
   activeRoute = "/work/local-discovery WebGL";
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -319,6 +358,7 @@ try {
     clickActions,
     emailAndExternalLinksValidatedNotLaunched: externalTargetsValidated,
     globe: globeState,
+    navigationRegressions,
     routeResults,
     browserErrors,
     failures,
