@@ -101,21 +101,12 @@ export default function SiteShell({ children }: { children: ReactNode }) {
       <main id="main-content">{children}</main>
 
       <footer className="site-footer">
-        <div className="site-footer__top">
-          <div>
-            <p className="eyebrow">A practical next step</p>
-            <h2>Have a useful problem<br /><em>worth solving?</em></h2>
-          </div>
-          <Link className="round-link" href="/start-project" aria-label="Start a project enquiry">
-            <span aria-hidden="true">↗</span>
-          </Link>
-        </div>
         <div className="site-footer__bottom">
           <Link className="wordmark wordmark--footer" href="/">
             <span className="wordmark__mark" aria-hidden="true">N<span>×</span></span>
             <span className="wordmark__name">NatexWorks</span>
           </Link>
-          <p>Thoughtful websites. Useful digital tools.</p>
+          <p>Websites, applications &amp; tools built for real work.</p>
           <a href="mailto:natexworks@gmail.com">natexworks@gmail.com</a>
           <span className="footer-copyright">© {new Date().getFullYear()} NatexWorks</span>
         </div>
