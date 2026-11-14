@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import HeroScene from "@/components/hero-scene";
 import ProjectArt from "@/components/project-art";
 import WorkflowDesktopStory from "@/components/workflow-desktop-story";
+import LaptopVisual from "@/components/laptop-visual";
 import { projects, process, services } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -159,13 +160,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="closing-invite">
+      <section className="closing-invite closing-invite--glass" aria-labelledby="closing-heading">
+        <div className="closing-invite__ambient" aria-hidden="true" />
         <div className="closing-invite__inner">
-          <p className="eyebrow">HAVE SOMETHING IN MIND?</p>
-          <h2>Let&apos;s make it<br /><em>work better.</em></h2>
-          <p>Tell me what you are building, what is slowing you down, or what you would like to improve.</p>
-          <Link className="button button--light" href="/start-project">Start a project <span aria-hidden="true">↗</span></Link>
-          <span className="closing-invite__index">NATEXWORKS / 2026</span>
+          <div className="closing-invite__glass-card" data-reveal data-mobile-reveal>
+            <div className="closing-invite__copy">
+              <p className="eyebrow">HAVE SOMETHING IN MIND?</p>
+              <h2 id="closing-heading">Let&apos;s make it<br /><em>work better.</em></h2>
+              <p>Tell me what you are building, what is slowing you down, or what you would like to improve.</p>
+              <Link className="button button--light" href="/start-project">Start a project <span aria-hidden="true">↗</span></Link>
+            </div>
+            <div className="closing-invite__art">
+              <LaptopVisual variant="closing" />
+            </div>
+            <span className="closing-invite__index">NATEXWORKS / 2026</span>
+          </div>
+          <div className="closing-invite__next glass-strip" data-reveal data-mobile-reveal>
+            <span className="eyebrow">A PRACTICAL NEXT STEP</span>
+            <p>One clear conversation. A focused plan. Useful work.</p>
+            <span className="closing-invite__next-meta">DESIGN / DEVELOPMENT / DISCOVERY</span>
+          </div>
         </div>
       </section>
     </>
