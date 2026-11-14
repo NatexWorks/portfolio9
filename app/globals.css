@@ -1617,3 +1617,106 @@ main { display: block; overflow: clip; }
   }
   .page-hero__bottom { animation: natexEditorialArrive .66s .16s both cubic-bezier(.2,.75,.2,1); }
 }
+
+
+/* Local Discovery page: keep the Earth open beside the H1, not inside a framed artwork panel. */
+.case-hero--discovery {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 78% 52%, rgba(108, 157, 190, .14), transparent 39%),
+    #e7e8e1;
+}
+.case-hero--discovery .local-discovery-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 72px);
+  min-height: clamp(420px, 43vw, 610px);
+  margin-top: 10px;
+}
+.local-discovery-hero__copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+.local-discovery-hero__copy .eyebrow {
+  margin-top: 62px;
+}
+.local-discovery-hero__copy h1 {
+  max-width: 790px;
+  font-size: clamp(64px, 7.2vw, 108px);
+  line-height: .88;
+}
+.local-discovery-hero__copy .case-hero__summary {
+  max-width: 560px;
+  margin: 26px 0 38px;
+}
+.local-discovery-hero__copy .case-hero__meta {
+  flex-wrap: wrap;
+  gap: 12px 32px;
+}
+.local-discovery-hero__earth {
+  position: relative;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: min(100%, 520px);
+  aspect-ratio: 1;
+  overflow: visible;
+  isolation: isolate;
+}
+.local-discovery-hero__earth::before {
+  position: absolute;
+  z-index: -1;
+  inset: 8%;
+  content: "";
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(105, 169, 207, .2), rgba(105, 169, 207, .06) 48%, transparent 72%);
+  filter: blur(27px);
+}
+.local-discovery-hero__earth .discovery-globe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .case-hero--discovery .local-discovery-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(275px, .78fr);
+    gap: 15px;
+    min-height: 390px;
+  }
+  .local-discovery-hero__copy h1 {
+    font-size: clamp(54px, 7.5vw, 78px);
+  }
+  .local-discovery-hero__earth {
+    width: min(100%, 390px);
+  }
+}
+
+@media (max-width: 700px) {
+  .case-hero--discovery {
+    padding-bottom: 38px;
+  }
+  .case-hero--discovery .local-discovery-hero {
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: 0;
+    margin-top: 0;
+  }
+  .local-discovery-hero__copy .eyebrow {
+    margin-top: 49px;
+  }
+  .local-discovery-hero__copy h1 {
+    font-size: clamp(57px, 14vw, 88px);
+  }
+  .local-discovery-hero__copy .case-hero__summary {
+    margin: 24px 0 30px;
+    font-size: 13px;
+  }
+  .local-discovery-hero__earth {
+    width: min(82vw, 350px);
+    margin: -2px auto 0;
+  }
+}
