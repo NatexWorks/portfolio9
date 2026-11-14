@@ -22,8 +22,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Verify npm lockfile
+        run: |
+          node -e 'const lock = require("./package-lock.json"); if (lock.lockfileVersion < 1) throw new Error("Unsupported package-lock version"); console.log("package-lock version:", lock.lockfileVersion)'
+          npm config get package-lock
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --package-lock=true
       - name: Lint
         run: npm run lint
       - name: Type check
