@@ -221,11 +221,20 @@ export default function MotionEngine() {
           const transformation = document.querySelector<HTMLElement>(".service-transform");
           if (transformation) {
             const steps = gsap.utils.toArray<HTMLElement>(".service-transform__step");
-            const artwork = document.querySelector<HTMLElement>(".service-transform__art");
+            const artwork = transformation.querySelector<HTMLElement>(".service-transform__art");
+            const laptopDevice = transformation.querySelector<HTMLElement>(".laptop-visual--service .laptop-visual__device");
+            const cafePreview = transformation.querySelector<HTMLElement>('[data-service-preview="cafe"]');
+            const inventoryPreview = transformation.querySelector<HTMLElement>('[data-service-preview="inventory"]');
             if (steps.length) {
               gsap.set(steps, { y: 14 });
               gsap.set(steps[0], { y: 0 });
             }
+            if (laptopDevice) {
+              gsap.set(laptopDevice, { scale: 0.94, transformOrigin: "50% 54%", force3D: true });
+            }
+            if (cafePreview) gsap.set(cafePreview, { autoAlpha: 1, x: 0 });
+            if (inventoryPreview) gsap.set(inventoryPreview, { autoAlpha: 0, x: -34 });
+
             const timeline = gsap.timeline({
               scrollTrigger: { trigger: transformation, start: "top top", end: "+=145%", pin: true, scrub: 0.8, anticipatePin: 1, invalidateOnRefresh: true },
             });
@@ -240,6 +249,20 @@ export default function MotionEngine() {
                 ease: "none",
               }, index + 0.2);
             });
+            if (laptopDevice) {
+              timeline.to(laptopDevice, {
+                scale: 1.27, rotationX: 11, rotationY: -15, rotationZ: -4,
+                duration: 1.05, ease: "none", force3D: true,
+              }, 0.25);
+              timeline.to(laptopDevice, {
+                scale: 1.62, rotationX: 8, rotationY: -7, rotationZ: -2,
+                duration: 1.2, ease: "none", force3D: true,
+              }, 1.2);
+            }
+            if (cafePreview && inventoryPreview) {
+              timeline.to(cafePreview, { autoAlpha: 0, x: 24, duration: 0.34, ease: "none" }, 1.08);
+              timeline.to(inventoryPreview, { autoAlpha: 1, x: 0, duration: 0.42, ease: "none" }, 1.14);
+            }
           }
           const gallery = document.querySelector<HTMLElement>(".work-gallery");
           const track = gallery?.querySelector<HTMLElement>(".work-gallery__track");
@@ -281,6 +304,55 @@ export default function MotionEngine() {
       // All content remains available without the optional animation bundle.
     });
     return cleanupEffect;
+  }, [pathname]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let context: { revert: () => void } | null = null;
+    const query = window.matchMedia("(max-width: 899px) and (prefers-reduced-motion: no-preference)");
+
+    const initialiseServiceLaptop = async () => {
+      if (!query.matches) return;
+      const transformation = document.querySelector<HTMLElement>(".service-transform");
+      const stage = transformation?.querySelector<HTMLElement>(".service-transform__stage");
+      const laptopDevice = transformation?.querySelector<HTMLElement>(".laptop-visual--service .laptop-visual__device");
+      const cafePreview = transformation?.querySelector<HTMLElement>('[data-service-preview="cafe"]');
+      const inventoryPreview = transformation?.querySelector<HTMLElement>('[data-service-preview="inventory"]');
+      if (!transformation || !stage || !laptopDevice || !cafePreview || !inventoryPreview) return;
+
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([import("gsap"), import("gsap/ScrollTrigger")]);
+      if (cancelled || !query.matches) return;
+
+      gsap.registerPlugin(ScrollTrigger);
+      context = gsap.context(() => {
+        gsap.set(laptopDevice, { scale: 0.94, transformOrigin: "50% 54%", force3D: true });
+        gsap.set(cafePreview, { autoAlpha: 1, x: 0 });
+        gsap.set(inventoryPreview, { autoAlpha: 0, x: -24 });
+
+        const timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: stage,
+            start: "top 86%",
+            end: "bottom 18%",
+            scrub: 0.55,
+            invalidateOnRefresh: true,
+          },
+        });
+        timeline
+          .to(laptopDevice, { scale: 1.2, duration: 0.8, ease: "none", force3D: true }, 0)
+          .to(cafePreview, { autoAlpha: 0, x: 18, duration: 0.32, ease: "none" }, 0.62)
+          .to(inventoryPreview, { autoAlpha: 1, x: 0, duration: 0.42, ease: "none" }, 0.68)
+          .to(laptopDevice, { scale: 1.38, duration: 0.9, ease: "none", force3D: true }, 0.68);
+      }, transformation);
+
+      ScrollTrigger.refresh();
+    };
+
+    void initialiseServiceLaptop().catch(() => {});
+    return () => {
+      cancelled = true;
+      context?.revert();
+    };
   }, [pathname]);
 
   useEffect(() => {
