@@ -44,7 +44,7 @@ export default async function ProjectPage({ params }: PageProps) {
               <p className="case-hero__summary">{project.summary}</p>
               <div className="case-hero__meta"><span>STATUS / {project.status.toUpperCase()}</span><span>TYPE / {project.category.toUpperCase()}</span></div>
             </div>
-            <div className="local-discovery-hero__earth" aria-label="Animated three-dimensional Earth globe">
+            <div className="local-discovery-hero__earth" role="img" aria-label="Animated three-dimensional Earth globe">
               <DiscoveryGlobe />
             </div>
           </div>
