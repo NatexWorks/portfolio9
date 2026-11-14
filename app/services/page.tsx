@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { process, services } from "@/content/site";
 import ServiceArt from "@/components/service-art";
+import LaptopVisual from "@/components/laptop-visual";
 
 export const metadata: Metadata = {
   title: "Services — Websites, applications & local visibility",
@@ -50,7 +51,7 @@ export default function ServicesPage() {
           <div className="service-transform__art">
             <div className="transform-orbit transform-orbit--one" />
             <div className="transform-orbit transform-orbit--two" />
-            <div className="transform-core"><span>N×</span><i /><b /></div>
+            <LaptopVisual variant="service" />
             <div className="transform-node transform-node--one">01</div>
             <div className="transform-node transform-node--two">02</div>
             <div className="transform-node transform-node--three">03</div>
@@ -93,10 +94,6 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <section className="page-cta section-pad">
-        <div><p className="eyebrow">YOUR NEXT STEP</p><h2>What needs to<br /><em>work better?</em></h2></div>
-        <div><p>Share the goal, what you already have, and the main obstacle. We can define a practical scope before committing to a build.</p><Link className="button button--dark" href="/start-project">Start a project <span aria-hidden="true">↗</span></Link></div>
-      </section>
     </>
   );
 }
