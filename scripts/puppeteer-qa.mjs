@@ -59,7 +59,7 @@ try {
         );
       }
 
-      await page.locator("main").waitFor({ state: "attached", timeout: 15000 });
+      await page.waitForSelector("main", { visible: true, timeout: 15000 });
       await page.evaluate(async () => {
         await document.fonts.ready;
         window.scrollTo(0, 0);
