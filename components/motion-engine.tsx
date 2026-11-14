@@ -4,6 +4,34 @@ import { useEffect, useLayoutEffect } from "react";
 
 export default function MotionEngine() {
   const pathname = usePathname();
+
+  // Let the app own scroll restoration so browser history and pinned GSAP
+  // sections cannot reopen a new route at an old scroll position.
+  useLayoutEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.history.scrollRestoration = previousRestoration;
+    };
+  }, []);
+
+  // Reset after the route has committed. The second frame also wins over any
+  // late scroll adjustment from the router or a just-reverted pin spacer.
+  useLayoutEffect(() => {
+    const resetToTop = () => {
+      const root = document.documentElement;
+      const previousBehavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      window.scrollTo(0, 0);
+      root.scrollTop = 0;
+      document.body.scrollTop = 0;
+      root.style.scrollBehavior = previousBehavior;
+    };
+
+    resetToTop();
+    const frame = window.requestAnimationFrame(resetToTop);
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
   // ScrollTrigger pins elements by moving them into spacer wrappers. Capture
   // same-site navigation and revert the active context before Next.js changes route DOM.
   useLayoutEffect(() => {
@@ -71,7 +99,7 @@ export default function MotionEngine() {
               clearProps: "transform",
             });
             gsap.timeline({
-              scrollTrigger: { trigger: hero, start: "top top", end: "+=72%", pin: true, scrub: 0.85, anticipatePin: 1, invalidateOnRefresh: true },
+              scrollTrigger: { trigger: hero, start: "top top", end: "+=72%", pin: true, scrub: 0.55, anticipatePin: 1, invalidateOnRefresh: true },
             })
               .to(".hero-story__visual", { scale: 1.1, rotate: 7, yPercent: -4, ease: "none" }, 0)
               .to(".hero-story__heading", { yPercent: -13, ease: "none" }, 0)
@@ -112,7 +140,7 @@ export default function MotionEngine() {
                   start: "top top+=96",
                   end: () => "+=" + Math.max(window.innerHeight * 2.1, 1500),
                   pin: true,
-                  scrub: 0.85,
+                  scrub: 0.55,
                   anticipatePin: 1,
                   invalidateOnRefresh: true,
                   onUpdate: (self) => updateActive(self.progress),
@@ -288,7 +316,7 @@ export default function MotionEngine() {
               rotation: index % 2 === 0 ? -6 : 6,
               scale: 0.965,
               transformOrigin: "50% 50%",
-              clipPath: "inset(0% 0% 100% 0% round 18px)",
+              force3D: true,
             });
           });
 
@@ -297,7 +325,7 @@ export default function MotionEngine() {
               trigger: stage,
               start: "top top+=78",
               end: () => "+=" + Math.max(window.innerHeight * 1.7, stage.offsetHeight - window.innerHeight * 0.15),
-              scrub: 0.72,
+              scrub: 0.48,
               invalidateOnRefresh: true,
             },
           });
@@ -310,7 +338,6 @@ export default function MotionEngine() {
                 y: index * 13,
                 scale: 0.985,
                 opacity: 0.84,
-                clipPath: "inset(0% 0% 0% 0% round 18px)",
                 duration: 0.34,
                 ease: "none",
               }, at);
@@ -321,7 +348,6 @@ export default function MotionEngine() {
               rotation: 0,
               scale: 1,
               opacity: 1,
-              clipPath: "inset(0% 0% 0% 0% round 18px)",
               duration: 0.64,
               ease: "power2.out",
             }, at + (index === 0 ? 0 : 0.06));
