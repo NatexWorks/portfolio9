@@ -188,6 +188,96 @@ try {
     await context.close();
   }
 
+
+  // Mobile workflow story: verify the GSAP/ScrollTrigger stack is tied to
+  // scroll progress, keeps every card reachable, and hands off to the next panel.
+  const workflowContext = await browser.newContext({
+    viewport: { width: 390, height: 820 },
+    deviceScaleFactor: 1,
+    isMobile: true,
+    hasTouch: true,
+  });
+  const workflowPage = await workflowContext.newPage();
+  workflowPage.on("pageerror", (error) => browserErrors.push("mobile workflow: " + error.message));
+  await workflowPage.goto(baseURL + "/", { waitUntil: "domcontentloaded" });
+
+  const workflowReady = await workflowPage.waitForFunction(
+    () => document.documentElement.classList.contains("mobile-story-motion-ready"),
+    { timeout: 12000 },
+  ).then(() => true).catch(() => false);
+  if (!workflowReady) {
+    failures.push("Mobile workflow: GSAP mobile story did not initialise at 390px");
+  } else {
+    const stage = workflowPage.locator("[data-mobile-workflow-stage]");
+    const stack = workflowPage.locator("[data-mobile-workflow-stack]");
+    const cards = workflowPage.locator("[data-workflow-card]");
+    const nextPanel = workflowPage.locator("[data-workflow-next-panel]");
+    if (await stage.count() !== 1 || await stack.count() !== 1 || await cards.count() !== 4 || await nextPanel.count() !== 1) {
+      failures.push("Mobile workflow: expected one stage, one stack, four cards, and one following panel");
+    } else {
+      const initial = await cards.evaluateAll((nodes) => nodes.map((node) => ({
+        opacity: Number.parseFloat(getComputedStyle(node).opacity),
+        transform: getComputedStyle(node).transform,
+      })));
+      const initialNextTransform = await nextPanel.evaluate((node) => getComputedStyle(node).transform);
+      const stageTop = await stage.evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
+      const stageHeight = await stage.evaluate((node) => node.getBoundingClientRect().height);
+      const start = stageTop - 78;
+      const travel = Math.max(window.innerHeight * 1.7, stageHeight - window.innerHeight * 0.15);
+
+      await workflowPage.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), start + travel * 0.18);
+      await workflowPage.waitForTimeout(180);
+      const early = await cards.evaluateAll((nodes) => nodes.map((node) => Number.parseFloat(getComputedStyle(node).opacity)));
+      if (!(early[0] > 0.5)) failures.push("Mobile workflow: first card did not reveal with scroll progress");
+      if (!(early[1] < early[0])) failures.push("Mobile workflow: cards did not enter in sequence");
+
+      await workflowPage.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), start + travel * 0.86);
+      await workflowPage.waitForTimeout(220);
+      const late = await cards.evaluateAll((nodes) => nodes.map((node) => ({
+        opacity: Number.parseFloat(getComputedStyle(node).opacity),
+        transform: getComputedStyle(node).transform,
+      })));
+      if (!late.every((card) => card.opacity > 0.5)) {
+        failures.push("Mobile workflow: all four cards were not visible by the end of the scroll sequence");
+      }
+      if (!late.some((card, index) => card.transform !== initial[index].transform)) {
+        failures.push("Mobile workflow: card transforms did not respond to scroll progress");
+      }
+
+      await workflowPage.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), start + travel * 0.99);
+      await workflowPage.waitForTimeout(180);
+      const finalNextTransform = await nextPanel.evaluate((node) => getComputedStyle(node).transform);
+      if (finalNextTransform === initialNextTransform) {
+        failures.push("Mobile workflow: next section did not animate into the foreground");
+      }
+    }
+  }
+  await workflowContext.close();
+
+  // Reduced-motion users get a complete, static card list rather than hidden
+  // cards waiting for a scroll-triggered animation.
+  const reducedMobileContext = await browser.newContext({
+    viewport: { width: 390, height: 820 },
+    reducedMotion: "reduce",
+    isMobile: true,
+    hasTouch: true,
+  });
+  const reducedMobilePage = await reducedMobileContext.newPage();
+  await reducedMobilePage.goto(baseURL + "/", { waitUntil: "domcontentloaded" });
+  const reducedWorkflow = await reducedMobilePage.locator("[data-workflow-card]").evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      opacity: Number.parseFloat(getComputedStyle(node).opacity),
+      visibility: getComputedStyle(node).visibility,
+      display: getComputedStyle(node).display,
+    })),
+  );
+  if (reducedWorkflow.length !== 4 || !reducedWorkflow.every((card) =>
+    card.opacity > 0.99 && card.visibility === "visible" && card.display !== "none"
+  )) {
+    failures.push("Mobile reduced-motion: all four workflow cards should remain visible without animation");
+  }
+  await reducedMobileContext.close();
+
   if (browserErrors.length) failures.push(...browserErrors.map((entry) => "Browser error: " + entry));
 
   const summary = {
