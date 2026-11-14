@@ -24,6 +24,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         id: dependencies
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
         run: |
           if ! node -e 'const fs = require("node:fs"); const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8")); if (lock.lockfileVersion < 1) process.exit(1)' >/dev/null 2>&1; then
             echo "Committed npm lockfile is invalid; regenerating it from package.json."
