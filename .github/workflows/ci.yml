@@ -38,6 +38,17 @@ jobs:
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           node -e 'const lock = require("./package-lock.json"); console.log("Using package-lock version:", lock.lockfileVersion)'
           npm ci --package-lock=true
+      - name: Apply non-breaking npm security fixes
+        continue-on-error: true
+        run: npm audit fix --no-fund
+      - name: Capture remaining npm security advisories
+        if: always()
+        run: |
+          mkdir -p artifacts/security
+          npm audit --json > artifacts/security/npm-audit.json || true
+          node -e 'const fs=require("node:fs"); const r=JSON.parse(fs.readFileSync("artifacts/security/npm-audit.json","utf8")); const v=r.vulnerabilities||{}; console.log("npm audit totals:", JSON.stringify(r.metadata?.vulnerabilities||{})); for (const [name,item] of Object.entries(v)) console.log(JSON.stringify({package:name,severity:item.severity,via:item.via.map(x=>typeof x==="string"?x:{name:x.name,title:x.title,url:x.url,range:x.range}),range:item.range,fixAvailable:item.fixAvailable}));'
+      - name: Reinstall exact audited lockfile
+        run: npm ci --package-lock=true
       - name: Lint
         run: npm run lint
       - name: Type check
@@ -97,6 +108,7 @@ jobs:
             backstop_data/bitmaps_test/
             backstop_data/html_report/
             backstop_data/ci_report/
+            artifacts/security/
           if-no-files-found: ignore
       - name: Commit npm lockfile and initial visual baselines
         if: success() && steps.dependencies.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main'
