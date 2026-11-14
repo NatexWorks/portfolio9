@@ -2382,3 +2382,163 @@ main { display: block; overflow: clip; }
     box-shadow: 0 5px 18px rgba(0,0,0,.3);
   }
 }
+
+
+/* Phone-only polish. All existing laptop and tablet layouts remain unchanged. */
+@media (max-width: 650px) {
+  html, body { max-width: 100%; overflow-x: clip; }
+  body { -webkit-text-size-adjust: 100%; }
+  :root { --side: 18px; }
+
+  .site-header { padding-top: env(safe-area-inset-top); }
+  .site-header__inner { width: calc(100% - 36px); }
+  .menu-toggle,
+  .mobile-nav a,
+  .button,
+  .round-link { min-height: 44px; }
+
+  .hero-story {
+    padding-left: max(var(--side), env(safe-area-inset-left));
+    padding-right: max(var(--side), env(safe-area-inset-right));
+  }
+  .hero-grid { gap: 24px; padding-top: 46px; padding-bottom: 30px; }
+  .hero-story__heading {
+    max-width: 11ch;
+    font-size: clamp(43px, 11.8vw, 64px);
+    line-height: .99;
+    letter-spacing: -.075em;
+    overflow-wrap: normal;
+  }
+  .hero-lede { max-width: 34ch; font-size: 14px; line-height: 1.75; }
+  .hero-actions { width: 100%; gap: 12px; }
+  .hero-actions .button { justify-content: center; padding-inline: 16px; }
+  .hero-actions .text-link { min-height: 44px; display: inline-flex; align-items: center; }
+  .hero-story__visual { width: min(100%, 360px); }
+  .hero-visual__frame { aspect-ratio: 1.12; }
+  .hero-story__note { margin: 12px 0 0 3%; font-size: 11px; line-height: 1.6; }
+  .hero-bottomline { gap: 10px; font-size: 7px; letter-spacing: .045em; }
+  .hero-bottomline a { white-space: nowrap; }
+
+  .section-pad { padding-top: 64px; padding-bottom: 64px; }
+  .section-kicker { align-items: flex-start; line-height: 1.55; }
+  .section-kicker span:last-child { max-width: 48%; }
+  .intro-statement { padding-top: 72px; padding-bottom: 76px; }
+  .intro-statement__body { margin-top: 38px; }
+  .intro-statement h2,
+  .section-heading-row h2 { letter-spacing: -.07em; }
+  .section-heading-row { margin-top: 34px; margin-bottom: 30px; }
+  .section-heading-row > p { font-size: 13px; line-height: 1.75; }
+
+  .service-list__item { min-height: 82px; padding-block: 14px; }
+  .service-list__detail { font-size: 9px; line-height: 1.5; letter-spacing: .045em; }
+  .featured-project__info { padding: 21px 18px; }
+  .featured-project__info p,
+  .concept-card > p { font-size: 12px; line-height: 1.75; }
+  .concept-row { gap: 24px; }
+  .concept-card__art .project-art { min-height: 235px; }
+
+  .workflow-showcase {
+    padding-top: 64px;
+    padding-bottom: 68px;
+    overflow: clip;
+  }
+  .workflow-showcase__heading { margin: 32px 0 22px; }
+  .workflow-showcase__heading h2 { font-size: clamp(38px, 10.5vw, 51px); }
+  .workflow-showcase__heading p { font-size: 13px; line-height: 1.75; }
+  .workflow-stage { margin-top: 14px; }
+  .workflow-stack { gap: 14px; }
+  .workflow-card {
+    min-height: 285px;
+    padding: 21px;
+    border-radius: 17px;
+    box-shadow: 0 16px 32px rgba(24,27,35,.13), 0 3px 8px rgba(24,27,35,.06);
+  }
+  .workflow-card__top { font-size: 9px; }
+  .workflow-card__top b { width: 42px; height: 42px; }
+  .workflow-card h3 { margin-bottom: 14px; font-size: 35px; }
+  .workflow-card p { font-size: 13px; line-height: 1.7; }
+  .workflow-card__detail { font-size: 8px; line-height: 1.6; }
+  .workflow-showcase__foot { font-size: 8px; line-height: 1.6; }
+
+  html.mobile-story-motion-ready .workflow-stage {
+    height: 225svh;
+    margin-top: 14px;
+  }
+  html.mobile-story-motion-ready .workflow-stack {
+    top: calc(66px + env(safe-area-inset-top));
+    height: calc(100svh - 90px - env(safe-area-inset-top));
+    min-height: 350px;
+  }
+  html.mobile-story-motion-ready .workflow-card {
+    height: min(56svh, 420px);
+    min-height: min(285px, calc(100svh - 132px));
+    max-height: calc(100svh - 112px - env(safe-area-inset-top));
+    padding: clamp(18px, 5vw, 22px);
+    backface-visibility: hidden;
+  }
+  html.mobile-story-motion-ready [data-workflow-next-panel] {
+    margin-top: -54px;
+    padding-top: 74px;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -18px 42px rgba(24,27,35,.14);
+  }
+
+  .process-grid { gap: 18px 0; }
+  .process-item { min-height: 190px; }
+  .process-item h3 { font-size: 18px; }
+  .process-item p { font-size: 12px; line-height: 1.7; }
+  .closing-invite { padding-top: 68px; padding-bottom: max(58px, env(safe-area-inset-bottom)); }
+  .closing-invite h2 { font-size: clamp(54px, 14vw, 76px); }
+  .closing-invite__copy > p:not(.eyebrow) { font-size: 13px; line-height: 1.75; }
+  .closing-invite__glass-card { padding: 25px 19px; }
+  .site-footer { padding-left: max(var(--side), env(safe-area-inset-left)); padding-right: max(var(--side), env(safe-area-inset-right)); }
+  .site-footer__top h2 { font-size: clamp(34px, 9vw, 42px); }
+
+  .page-hero h1,
+  .case-hero h1,
+  .contact-page h1 { overflow-wrap: anywhere; }
+  .contact-page__form { padding: 22px 16px; }
+  .enquiry-form input,
+  .enquiry-form select,
+  .enquiry-form textarea { min-height: 46px; font-size: 16px; }
+  .enquiry-form textarea { min-height: 120px; }
+  .case-deep__summary,
+  .case-deep__intro p:not(.section-kicker),
+  .case-deep__grid p { font-size: 13px; line-height: 1.75; }
+  .case-deep__grid article { padding: 19px; }
+}
+
+@media (max-width: 390px) {
+  .hero-story__heading { font-size: clamp(40px, 11.2vw, 46px); }
+  .hero-actions .button { width: 100%; }
+  .hero-actions .text-link { align-self: flex-start; }
+  .workflow-card { min-height: 270px; padding: 18px; }
+  .workflow-card p { font-size: 12px; }
+  .section-kicker { font-size: 6.5px; }
+}
+
+@media (max-width: 650px) and (prefers-reduced-motion: reduce) {
+  html.mobile-story-motion-ready .workflow-stage,
+  html.mobile-story-motion-ready .workflow-stack,
+  html.mobile-story-motion-ready .workflow-card,
+  html.mobile-story-motion-ready [data-workflow-next-panel] {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin-top: 0 !important;
+    transform: none !important;
+  }
+  html.mobile-story-motion-ready .workflow-stack {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  html.mobile-story-motion-ready .workflow-card {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
