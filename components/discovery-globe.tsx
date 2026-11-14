@@ -7,8 +7,9 @@ import {
   BackSide,
   CanvasTexture,
   SRGBColorSpace,
+  TextureLoader,
 } from "three";
-import type { Group } from "three";
+import type { Group, Texture } from "three";
 
 type Point = [number, number];
 type Props = { compact?: boolean };
@@ -170,15 +171,59 @@ function Earth({ compact, animate }: {
   compact: boolean;
   animate: boolean;
 }) {
-  const earthMap = useMemo(() => createEarthTexture(), []);
+  // Keep a local procedural texture as a resilient fallback, then upgrade to
+  // a detailed satellite surface when the public texture assets finish loading.
+  const fallbackEarthMap = useMemo(() => createEarthTexture(), []);
   const cloudMap = useMemo(() => createCloudTexture(), []);
+  const [satelliteMap, setSatelliteMap] = useState<Texture | null>(null);
+  const [normalMap, setNormalMap] = useState<Texture | null>(null);
   const planet = useRef<Group>(null);
   const cloudLayer = useRef<Group>(null);
 
-  useEffect(() => () => {
-    earthMap?.dispose();
-    cloudMap?.dispose();
-  }, [earthMap, cloudMap]);
+  useEffect(() => {
+    let active = true;
+    const loader = new TextureLoader();
+    loader.setCrossOrigin("anonymous");
+
+    const surface = loader.load(
+      "https://cdn.apewebapps.com/threejs/168/examples/textures/planets/earth_atmos_2048.jpg",
+      (texture) => {
+        texture.colorSpace = SRGBColorSpace;
+        texture.anisotropy = 8;
+        texture.needsUpdate = true;
+        if (active) setSatelliteMap(texture);
+        else texture.dispose();
+      },
+      undefined,
+      () => {
+        if (active) setSatelliteMap(null);
+      },
+    );
+
+    const relief = loader.load(
+      "https://cdn.apewebapps.com/threejs/168/examples/textures/planets/earth_normal_2048.jpg",
+      (texture) => {
+        texture.anisotropy = 8;
+        texture.needsUpdate = true;
+        if (active) setNormalMap(texture);
+        else texture.dispose();
+      },
+      undefined,
+      () => {
+        if (active) setNormalMap(null);
+      },
+    );
+
+    return () => {
+      active = false;
+      surface.dispose();
+      relief.dispose();
+      fallbackEarthMap?.dispose();
+      cloudMap?.dispose();
+    };
+  }, [fallbackEarthMap, cloudMap]);
+
+  const earthMap = satelliteMap ?? fallbackEarthMap;
 
   useFrame((state, delta) => {
     if (!animate) return;
@@ -203,11 +248,13 @@ function Earth({ compact, animate }: {
           <sphereGeometry args={[1.12, compact ? 64 : 88, compact ? 48 : 72]} />
           <meshPhysicalMaterial
             map={earthMap ?? undefined}
+            normalMap={normalMap ?? undefined}
+            normalScale={[0.16, 0.16]}
             color={earthMap ? "#ffffff" : "#16435b"}
-            roughness={0.78}
-            metalness={0.06}
-            clearcoat={0.28}
-            clearcoatRoughness={0.55}
+            roughness={0.94}
+            metalness={0}
+            clearcoat={0.08}
+            clearcoatRoughness={0.85}
           />
         </mesh>
 
@@ -240,14 +287,18 @@ function Earth({ compact, animate }: {
         ))}
       </group>
 
-      <mesh rotation={[1.18, 0.18, 0.48]}>
-        <torusGeometry args={[1.34, 0.0065, 8, 144]} />
-        <meshBasicMaterial color="#e9b57f" transparent opacity={0.55} />
-      </mesh>
-      <mesh rotation={[0.44, -0.74, 1.12]}>
-        <torusGeometry args={[1.42, 0.004, 8, 144]} />
-        <meshBasicMaterial color="#7eb7d3" transparent opacity={0.35} />
-      </mesh>
+      {compact && (
+        <>
+          <mesh rotation={[1.18, 0.18, 0.48]}>
+            <torusGeometry args={[1.34, 0.0065, 8, 144]} />
+            <meshBasicMaterial color="#e9b57f" transparent opacity={0.45} />
+          </mesh>
+          <mesh rotation={[0.44, -0.74, 1.12]}>
+            <torusGeometry args={[1.42, 0.004, 8, 144]} />
+            <meshBasicMaterial color="#7eb7d3" transparent opacity={0.25} />
+          </mesh>
+        </>
+      )}
     </group>
   );
 }
