@@ -59,7 +59,7 @@ function OrbitObject() {
 export default function HeroCanvas({ visible, fallback }: { visible: boolean; fallback: ReactNode }) {
   return (
     <Canvas
-      dpr={[1, 1.5]}
+      dpr={[1, 1.25]}
       camera={{ position: [0, 0, 5.7], fov: 38 }}
       frameloop={visible ? "always" : "never"}
       gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
