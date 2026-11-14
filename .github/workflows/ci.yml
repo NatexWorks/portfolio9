@@ -46,7 +46,32 @@ jobs:
         run: |
           mkdir -p artifacts/security
           npm audit --json > artifacts/security/npm-audit.json || true
-          node -e 'const fs=require("node:fs"); const r=JSON.parse(fs.readFileSync("artifacts/security/npm-audit.json","utf8")); const v=r.vulnerabilities||{}; console.log("npm audit totals:", JSON.stringify(r.metadata?.vulnerabilities||{})); for (const [name,item] of Object.entries(v)) console.log(JSON.stringify({package:name,severity:item.severity,via:item.via.map(x=>typeof x==="string"?x:{name:x.name,title:x.title,url:x.url,range:x.range}),range:item.range,fixAvailable:item.fixAvailable}));'
+          npm audit --omit=dev --json > artifacts/security/npm-audit-production.json || true
+          node <<'NODE'
+          const fs = require("node:fs");
+          for (const [label, file] of [
+            ["FULL TREE", "artifacts/security/npm-audit.json"],
+            ["PRODUCTION ONLY", "artifacts/security/npm-audit-production.json"],
+          ]) {
+            const report = JSON.parse(fs.readFileSync(file, "utf8"));
+            const totals = report.metadata?.vulnerabilities || {};
+            console.log(label + " totals: " + JSON.stringify(totals));
+            for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
+              const advisories = (item.via || [])
+                .filter((entry) => typeof entry === "object")
+                .map((entry) => ({ title: entry.title, url: entry.url, range: entry.range }));
+              console.log(JSON.stringify({
+                package: name,
+                severity: item.severity,
+                direct: item.isDirect,
+                range: item.range,
+                dependencyPaths: item.nodes,
+                fixAvailable: item.fixAvailable,
+                advisories,
+              }));
+            }
+          }
+          NODE
       - name: Reinstall exact audited lockfile
         run: npm ci --package-lock=true
       - name: Lint
