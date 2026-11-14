@@ -52,10 +52,13 @@ try {
         waitUntil: "domcontentloaded",
         timeout: 30000,
       });
-      if (!response || response.status() !== 200) {
+      const responseStatus = response?.status() ?? null;
+      // A 304 is a valid cache revalidation response: Chromium can reuse the
+      // previously loaded document, so it must not be treated as a failed page.
+      if (!response || (!response.ok() && responseStatus !== 304)) {
         failures.push(
-          route + " (" + viewport.label + "): expected HTTP 200, got " +
-          (response?.status() ?? "no response"),
+          route + " (" + viewport.label + "): expected a successful response or HTTP 304, got " +
+          (responseStatus ?? "no response"),
         );
       }
 
