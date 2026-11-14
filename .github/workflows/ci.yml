@@ -25,13 +25,11 @@ jobs:
       - name: Install dependencies
         id: dependencies
         run: |
-          if node -e 'const fs = require("node:fs"); const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8")); if (lock.lockfileVersion < 1) process.exit(1)' >/dev/null 2>&1; then
-            echo "Committed npm lockfile is valid."
-          else
+          if ! node -e 'const fs = require("node:fs"); const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8")); if (lock.lockfileVersion < 1) process.exit(1)' >/dev/null 2>&1; then
             echo "Committed npm lockfile is invalid; regenerating it from package.json."
             rm -f package-lock.json
-            npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           fi
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           node -e 'const lock = require("./package-lock.json"); console.log("Using package-lock version:", lock.lockfileVersion)'
           npm ci --package-lock=true
       - name: Lint
@@ -42,8 +40,6 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
-      - name: Install browser QA tooling
-        run: npm install --no-save --package-lock=false playwright @axe-core/playwright
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Start production server
@@ -53,15 +49,58 @@ jobs:
           node -e 'const until = Date.now() + 90000; const tick = async () => { try { const r = await fetch("http://127.0.0.1:3000"); if (r.ok) process.exit(0); } catch {} if (Date.now() > until) { console.error("Next.js server did not become ready"); process.exit(1); } setTimeout(tick, 1000); }; tick();'
       - name: Run responsive, accessibility, and full click coverage
         run: npm run test:browser
-      - name: Upload browser QA screenshots
+      - name: Run Puppeteer browser checks
+        run: npm run test:puppeteer
+      - name: Seed BackstopJS reference screenshots
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if ! find backstop_data/bitmaps_reference -type f -name '*.png' -print -quit 2>/dev/null | grep -q .; then
+            echo "Creating the initial BackstopJS reference set for the current main build."
+            npm run visual:backstop:reference
+            git add backstop_data/bitmaps_reference
+            if ! git diff --cached --quiet; then
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git commit -m "Add initial BackstopJS visual baselines"
+              git push
+            fi
+          else
+            echo "BackstopJS reference screenshots already exist."
+          fi
+      - name: Run BackstopJS visual regression
+        run: npm run visual:backstop
+      - name: Run Percy visual snapshots when configured
+        env:
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+        run: |
+          if [ -n "$PERCY_TOKEN" ]; then
+            npm run visual:percy
+          else
+            echo "Percy skipped: add the PERCY_TOKEN repository secret to enable cloud visual comparisons."
+          fi
+      - name: Run Applitools Visual AI when configured
+        env:
+          APPLITOOLS_API_KEY: ${{ secrets.APPLITOOLS_API_KEY }}
+        run: |
+          if [ -n "$APPLITOOLS_API_KEY" ]; then
+            npm run visual:applitools
+          else
+            echo "Applitools skipped: add the APPLITOOLS_API_KEY repository secret to enable Visual AI checks."
+          fi
+      - name: Upload browser QA screenshots and visual reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: portfolio-browser-qa
-          path: artifacts/browser-qa/
+          name: portfolio-visual-qa
+          path: |
+            artifacts/browser-qa/
+            artifacts/puppeteer-qa/
+            backstop_data/bitmaps_test/
+            backstop_data/html_report/
+            backstop_data/ci_report/
           if-no-files-found: ignore
       - name: Commit regenerated npm lockfile
-        if: always() && steps.dependencies.outcome == 'success'
+        if: always() && steps.dependencies.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git add package-lock.json
           if ! git diff --cached --quiet; then
