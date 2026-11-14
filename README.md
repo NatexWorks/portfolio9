@@ -76,6 +76,10 @@ npm run build
 
 Responsive browser checks should cover 320, 360, 390, 430, 768, 900, 1024, 1280, and 1440+ CSS pixels, plus keyboard-only navigation and reduced-motion settings.
 
+## Visual regression and cross-browser testing
+
+The visual QA workflow uses Playwright, Puppeteer, BackstopJS, Percy, and Applitools Eyes. See [docs/visual-testing.md](docs/visual-testing.md) for local commands, baseline approval rules, and the required GitHub Actions secrets.
+
 ## Contact form behaviour
 
 The contact form validates required fields client-side and prepares a message in the visitor's default email application using a `mailto:` link. It does not send email from the server or store enquiry data. A backend delivery provider would be a separate, explicitly configured integration.
