@@ -135,9 +135,28 @@ try {
 
       await page.goto(baseURL + route, { waitUntil: "domcontentloaded" });
       await page.waitForTimeout(100);
-      const link = page.locator("a[href]").nth(item.index);
-      if (!(await link.isVisible().catch(() => false))) continue;
-      await link.scrollIntoViewIfNeeded();
+
+      // Re-find the visible link by its destination after every navigation.
+      // ScrollTrigger/reveal hydration can change the DOM order, so the index
+      // captured before reloading the route is not a stable element identity.
+      const matchingLinks = page.locator("a[href=" + JSON.stringify(item.href) + "]");
+      const matchingCount = await matchingLinks.count();
+      let link = null;
+      for (let matchIndex = 0; matchIndex < matchingCount; matchIndex += 1) {
+        const candidate = matchingLinks.nth(matchIndex);
+        if (await candidate.isVisible().catch(() => false)) {
+          link = candidate;
+          break;
+        }
+      }
+      if (!link) continue;
+
+      // Use instant programmatic scrolling to avoid waiting for a GSAP-pinned
+      // element to become geometrically stable during smooth scroll movement.
+      await link.evaluate((element) =>
+        element.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }),
+      );
+      await page.waitForTimeout(250);
 
       try {
         const popupPromise = item.target === "_blank"
@@ -146,11 +165,11 @@ try {
         try {
           await link.click({ timeout: 7000 });
         } catch (firstError) {
-          // Scroll-triggered reveal layers can still be settling immediately
-          // after scrollIntoViewIfNeeded. Retry once after the motion settles;
-          // retain full diagnostics if the real pointer click still fails.
+          // Give the reveal transition one settling window, then retry once.
           await page.waitForTimeout(850);
-          await link.scrollIntoViewIfNeeded();
+          await link.evaluate((element) =>
+            element.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }),
+          );
           try {
             await link.click({ timeout: 7000 });
           } catch (secondError) {
