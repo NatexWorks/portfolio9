@@ -49,16 +49,23 @@ export default function HeroScene() {
     const node = frame.current;
     if (!node) return;
 
+    let activationTimer: number | undefined;
     const observer = new IntersectionObserver(
       (entries) => {
         const isVisible = entries[0]?.isIntersecting ?? false;
         setVisible(isVisible);
-        if (isVisible) setHasEntered(true);
+        if (isVisible && activationTimer === undefined) {
+          // Give the page's text and layout the first paint before loading 3D.
+          activationTimer = window.setTimeout(() => setHasEntered(true), 900);
+        }
       },
       { rootMargin: "180px 0px" },
     );
     observer.observe(node);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (activationTimer !== undefined) window.clearTimeout(activationTimer);
+    };
   }, []);
 
   return (
