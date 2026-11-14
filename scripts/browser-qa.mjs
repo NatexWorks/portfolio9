@@ -223,7 +223,8 @@ try {
       const stageTop = await stage.evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
       const stageHeight = await stage.evaluate((node) => node.getBoundingClientRect().height);
       const start = stageTop - 78;
-      const travel = Math.max(window.innerHeight * 1.7, stageHeight - window.innerHeight * 0.15);
+      const viewportHeight = workflowPage.viewportSize()?.height ?? 820;
+      const travel = Math.max(viewportHeight * 1.7, stageHeight - viewportHeight * 0.15);
 
       await workflowPage.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), start + travel * 0.18);
       await workflowPage.waitForTimeout(180);
