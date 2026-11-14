@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 type LaptopVisualProps = {
   variant?: "service" | "closing";
@@ -57,7 +57,6 @@ function InventoryScreenPreview() {
 
 export default function LaptopVisual({ variant = "closing" }: LaptopVisualProps) {
   const root = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const node = root.current;
@@ -65,14 +64,14 @@ export default function LaptopVisual({ variant = "closing" }: LaptopVisualProps)
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reducedMotion || typeof IntersectionObserver === "undefined") {
-      setVisible(true);
+      node.classList.add("is-visible");
       return;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry?.isIntersecting) return;
-        setVisible(true);
+        node.classList.add("is-visible");
         observer.disconnect();
       },
       { threshold: 0.18, rootMargin: "0px 0px -6% 0px" },
@@ -85,7 +84,7 @@ export default function LaptopVisual({ variant = "closing" }: LaptopVisualProps)
   return (
     <div
       ref={root}
-      className={"laptop-visual laptop-visual--" + variant + (visible ? " is-visible" : "")}
+      className={"laptop-visual laptop-visual--" + variant}
       aria-hidden="true"
     >
       <span className="laptop-visual__aura" />
