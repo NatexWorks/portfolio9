@@ -143,7 +143,45 @@ try {
         const popupPromise = item.target === "_blank"
           ? context.waitForEvent("page", { timeout: 5000 }).catch(() => null)
           : null;
-        await link.click({ timeout: 7000 });
+        try {
+          await link.click({ timeout: 7000 });
+        } catch (firstError) {
+          // Scroll-triggered reveal layers can still be settling immediately
+          // after scrollIntoViewIfNeeded. Retry once after the motion settles;
+          // retain full diagnostics if the real pointer click still fails.
+          await page.waitForTimeout(850);
+          await link.scrollIntoViewIfNeeded();
+          try {
+            await link.click({ timeout: 7000 });
+          } catch (secondError) {
+            const diagnostic = await link.evaluate((element) => {
+              const rect = element.getBoundingClientRect();
+              const x = rect.left + rect.width / 2;
+              const y = rect.top + rect.height / 2;
+              const hit = document.elementFromPoint(x, y);
+              const style = getComputedStyle(element);
+              return {
+                href: element.getAttribute("href"),
+                connected: element.isConnected,
+                rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+                opacity: style.opacity,
+                visibility: style.visibility,
+                pointerEvents: style.pointerEvents,
+                transform: style.transform,
+                hitAtCenter: hit?.outerHTML?.slice(0, 500) ?? null,
+                scrollY: window.scrollY,
+              };
+            }).catch((diagnosticError) => ({ diagnosticError: String(diagnosticError) }));
+            const filename = "artifacts/browser-qa/click-failure-" +
+              route.replaceAll("/", "_").replace(/^_$/, "home") + ".png";
+            await page.screenshot({ path: filename, fullPage: false }).catch(() => {});
+            throw new Error(
+              "First click attempt: " + firstError.message +
+              "\\nRetry click attempt: " + secondError.message +
+              "\\nElement diagnostics: " + JSON.stringify(diagnostic),
+            );
+          }
+        }
 
         if (item.target === "_blank") {
           const popup = await popupPromise;
@@ -164,7 +202,7 @@ try {
         internalLinksClicked += 1;
         clickActions += 1;
       } catch (error) {
-        failures.push(route + ": click failed for " + item.href + " — " + String(error).slice(0, 200));
+        failures.push(route + ": click failed for " + item.href + " — " + (error?.message || String(error)));
       }
     }
 
