@@ -50,6 +50,7 @@ try {
       const page = await context.newPage();
       const eyes = new Eyes(runner, configuration);
       const testName = routeName + " — " + viewport.label;
+      let eyesOpen = false;
 
       try {
         await eyes.open(
@@ -58,6 +59,7 @@ try {
           testName,
           { width: viewport.width, height: viewport.height },
         );
+        eyesOpen = true;
 
         const response = await page.goto(baseURL + route, {
           waitUntil: "domcontentloaded",
@@ -96,7 +98,7 @@ try {
         failures.push(testName + ": " + (error?.stack || error?.message || String(error)));
         throw error;
       } finally {
-        await eyes.close();
+        if (eyesOpen) await eyes.close();
         await context.close();
       }
     }
