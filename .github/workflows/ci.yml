@@ -91,24 +91,25 @@ jobs:
           node -e 'const until = Date.now() + 90000; const tick = async () => { try { const r = await fetch("http://127.0.0.1:3000"); if (r.ok) process.exit(0); } catch {} if (Date.now() > until) { console.error("Next.js server did not become ready"); process.exit(1); } setTimeout(tick, 1000); }; tick();'
       - name: Run responsive, accessibility, and full click coverage
         run: npm run test:browser
-      - name: Run Puppeteer browser checks
-        run: npm run test:puppeteer
-      - name: Seed BackstopJS reference screenshots
+      - name: Run Playwright browser-engine smoke checks
+        run: npm run test:browser-smoke
+      - name: Seed Playwright visual regression baselines
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          if ! find backstop_data/bitmaps_reference -type f -name '*.png' -print -quit 2>/dev/null | grep -q .; then
-            echo "Creating the initial BackstopJS reference set for the current main build."
-            npm run visual:backstop:reference
+          if ! find visual-regression/baselines -type f -name '*.png' -print -quit 2>/dev/null | grep -q .; then
+            echo "Creating the initial Playwright visual-regression baselines for the current main build."
+            npm run visual:reference
           else
-            echo "BackstopJS reference screenshots already exist."
+            echo "Playwright visual-regression baselines already exist."
           fi
-      - name: Run BackstopJS visual regression
-        run: npm run visual:backstop
+      - name: Run Playwright visual regression
+        run: npm run visual:regression
       - name: Run Percy visual snapshots when configured
         env:
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
         run: |
           if [ -n "$PERCY_TOKEN" ]; then
+            npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund @percy/cli@1.31.9 @percy/playwright@1.1.1
             npm run visual:percy
           else
             echo "Percy skipped: add the PERCY_TOKEN repository secret to enable cloud visual comparisons."
@@ -118,10 +119,17 @@ jobs:
           APPLITOOLS_API_KEY: ${{ secrets.APPLITOOLS_API_KEY }}
         run: |
           if [ -n "$APPLITOOLS_API_KEY" ]; then
+            npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund @applitools/eyes-playwright@1.48.4
             npm run visual:applitools
           else
             echo "Applitools skipped: add the APPLITOOLS_API_KEY repository secret to enable Visual AI checks."
           fi
+      - name: Capture final optional-tool security audit
+        if: always()
+        run: |
+          mkdir -p artifacts/security
+          npm audit --json > artifacts/security/npm-audit-after-optional-tools.json || true
+          node -e 'const report = require("./artifacts/security/npm-audit-after-optional-tools.json"); console.log("FINAL TREE totals:", JSON.stringify(report.metadata?.vulnerabilities || {}))'
       - name: Upload browser QA screenshots and visual reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -129,16 +137,16 @@ jobs:
           name: portfolio-visual-qa
           path: |
             artifacts/browser-qa/
+            artifacts/browser-smoke-qa/
+            artifacts/visual-regression/
             artifacts/puppeteer-qa/
-            backstop_data/bitmaps_test/
-            backstop_data/html_report/
-            backstop_data/ci_report/
             artifacts/security/
+            visual-regression/baselines/
           if-no-files-found: ignore
       - name: Commit npm lockfile and initial visual baselines
         if: success() && steps.dependencies.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          git add package-lock.json backstop_data/bitmaps_reference
+          git add package-lock.json visual-regression/baselines
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

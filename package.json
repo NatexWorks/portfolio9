@@ -13,12 +13,12 @@
     "content:extract": "node scripts/extract-legacy-content.mjs",
     "content:verify": "node scripts/verify-content.mjs",
     "test:browser": "node scripts/browser-qa.mjs && node scripts/interactions-qa.mjs",
-    "test:puppeteer": "node scripts/puppeteer-qa.mjs",
-    "visual:backstop:reference": "backstop reference --config=backstop.config.cjs",
-    "visual:backstop": "backstop test --config=backstop.config.cjs",
+    "test:browser-smoke": "node scripts/browser-smoke-qa.mjs",
+    "visual:reference": "node scripts/visual-regression.mjs reference",
+    "visual:regression": "node scripts/visual-regression.mjs test",
     "visual:percy": "percy exec -- node scripts/percy-visual-qa.mjs",
     "visual:applitools": "node scripts/applitools-visual-qa.mjs",
-    "test:visual": "npm run test:puppeteer && npm run visual:backstop"
+    "test:visual": "npm run test:browser && npm run test:browser-smoke && npm run visual:regression"
   },
   "dependencies": {
     "@react-three/fiber": "^9.1.2",
@@ -36,12 +36,9 @@
     "@types/three": "^0.180.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.4.3",
+    "pixelmatch": "8.0.0",
     "playwright": "1.65.0",
-    "typescript": "^5.9.0",
-    "@applitools/eyes-playwright": "1.51.4",
-    "@percy/cli": "1.32.12",
-    "@percy/playwright": "1.1.2",
-    "backstopjs": "6.3.25",
-    "puppeteer-core": "25.17.0"
+    "pngjs": "7.0.0",
+    "typescript": "^5.9.0"
   }
 }
